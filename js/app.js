@@ -18,16 +18,7 @@
     var timerUpdateDate = 0,
         flagConsole = false,
         flagDigital = false,
-        battery = navigator.getBattery().then(function(battery) {
-        	  batteryIsCharging = battery.charging;
-
-              // add eventListener for battery state
-              battery.addEventListener("chargingchange", getBatteryState);
-              battery.addEventListener("chargingtimechange", getBatteryState);
-              battery.addEventListener("dischargingtimechange", getBatteryState);
-              battery.addEventListener("levelchange", getBatteryState);
-
-        }),
+        battery = navigator.battery || navigator.webkitBattery || navigator.mozBattery,
         interval,
         BACKGROUND_URL = "url('./images/bg.jpg')",
         arrDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -75,7 +66,7 @@
             getDate = "0" + getDate;
         }
 
-        strFullDate = arrDay[getDay] + " " + getDate;
+        strFullDate = arrDay[getDay] + " " + getDate + " " + arrMonth[getMonth];
         strDay.innerHTML = strFullDate;
 
         // If an updateDate timer already exists, clear the previous timer.
@@ -89,12 +80,6 @@
         }, nextInterval);
     }
 
-    function toggleStopWatch()
-    {
-    	console.log("clicked");
-    	document.getElementById("stopwatch").innerHTML = "HIIIII";
-    }
-    
     /**
      * Updates the current time.
      * @private
@@ -189,6 +174,11 @@
      * @private
      */
     function bindEvents() {
+        // add eventListener for battery state
+        battery.addEventListener("chargingchange", getBatteryState);
+        battery.addEventListener("chargingtimechange", getBatteryState);
+        battery.addEventListener("dischargingtimechange", getBatteryState);
+        battery.addEventListener("levelchange", getBatteryState);
 
         // add eventListener for timetick
         window.addEventListener("timetick", function() {
@@ -218,8 +208,6 @@
         tizen.time.setTimezoneChangeListener(function() {
             updateWatch();
         });
-        
-       document.getElementById("stopwatch").addEventListener("click", function(){ toggleStopWatch() });
     }
 
     /**
@@ -232,9 +220,6 @@
         updateDate(0);
 
         bindEvents();
-    	document.getElementById("stopwatch").innerHTML = "00:00:00";
-    	console.log("hi there");
-
     }
 
     window.onload = init();
