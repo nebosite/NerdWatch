@@ -1,0 +1,15 @@
+
+TODO
+	[x] Show more compact date
+	[x] Change AM/PM to just P if PM
+	[ ] Smaller text to make room for functions
+	[ ] One-touch timer
+		slide to quickly change timer time
+		release to start timer
+		tap and hold to stop timer
+		
+	
+	
+	
+	[ ] Curve the time at the top 
+		https://css-tricks.com/snippets/svg/curved-text-along-path/
