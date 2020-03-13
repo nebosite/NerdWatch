@@ -66,7 +66,7 @@
             getDate = "0" + getDate;
         }
 
-        strFullDate = arrDay[getDay] + " " + getDate + " " + arrMonth[getMonth];
+        strFullDate = arrMonth[getMonth] + " " + getDate;
         strDay.innerHTML = strFullDate;
 
         // If an updateDate timer already exists, clear the previous timer.
@@ -97,12 +97,16 @@
         strMinutes.innerHTML = minute;
 
         if (hour < 12) {
-            strAmpm.innerHTML = "AM";
-            if (hour < 10) {
+            strAmpm.innerHTML = "";
+            if(hour == 0)
+            {
+                strHours.innerHTML = "12";
+            }
+            else if (hour < 10) {
                 strHours.innerHTML = "0" + hour;
             }
         } else {
-            strAmpm.innerHTML = "PM";
+            strAmpm.innerHTML = "P";
         }
 
         if (minute < 10) {
