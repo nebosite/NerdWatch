@@ -105,3 +105,8 @@ dist
 
 # Tizen watch dev
 .metadata/
+.sign/
+*.wgt
+.manifest.tmp
+signature*.xml
+author-signature.xml

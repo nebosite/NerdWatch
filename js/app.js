@@ -62,10 +62,6 @@
             }
         }
 
-        if (getDate < 10) {
-            getDate = "0" + getDate;
-        }
-
         strFullDate = arrMonth[getMonth] + " " + getDate;
         strDay.innerHTML = strFullDate;
 
@@ -97,13 +93,13 @@
         strMinutes.innerHTML = minute;
 
         if (hour < 12) {
-            strAmpm.innerHTML = "";
+            strAmpm.innerHTML = "A";
             if(hour == 0)
             {
                 strHours.innerHTML = "12";
             }
             else if (hour < 10) {
-                strHours.innerHTML = "0" + hour;
+                strHours.innerHTML = "&nbsp;" + hour;
             }
         } else {
             strAmpm.innerHTML = "P";
@@ -157,9 +153,10 @@
      * @private
      */
     function getBatteryState() {
-        var batteryLevel = Math.floor(battery.level * 10),
+        var batteryLevel = Math.floor(battery.level * 100),
             batteryFill = document.getElementById("battery-fill");
 
+        console.log("Battery: " + batteryLevel)
         batteryLevel = batteryLevel + 1;
         batteryFill.style.width = batteryLevel + "%";
     }
