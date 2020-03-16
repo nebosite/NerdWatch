@@ -1,28 +1,19 @@
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * NERD WATCH!
  */
 
 (function() {
     var timerUpdateDate = 0,
-        flagConsole = false,
-        flagDigital = false,
+        stopwatchStart = 0,
+        isStopwatchActive = false,
+        elapsedStopwatchTime = 0,
+        isTickVisible = false,
         battery = navigator.battery || navigator.webkitBattery || navigator.mozBattery,
-        interval,
+        timeUpdateInterval,
+        stopwatchUpdateInterval,
         BACKGROUND_URL = "url('./images/bg.jpg')",
-        arrDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    	
 
     /**
      * Updates the date and sets refresh callback on the next day.
@@ -85,6 +76,7 @@
             strConsole = document.getElementById("str-console"),
             strMinutes = document.getElementById("str-minutes"),
             strAmpm = document.getElementById("str-ampm"),
+            strStopwatch = document.getElementById("str-elapsedtime"),
             datetime = tizen.time.getCurrentDateTime(),
             hour = datetime.getHours(),
             minute = datetime.getMinutes();
@@ -94,35 +86,58 @@
 
         if (hour < 12) {
             strAmpm.innerHTML = "A";
-            if(hour == 0)
-            {
-                strHours.innerHTML = "12";
-            }
-            else if (hour < 10) {
-                strHours.innerHTML = "&nbsp;" + hour;
-            }
+
         } else {
+        	hour -= 12;
             strAmpm.innerHTML = "P";
         }
-
+        
+        if(hour === 0)
+        {
+            strHours.innerHTML = "12";
+        }
+        else if (hour < 10) {
+            strHours.innerHTML = "&nbsp;" + hour;
+        }
+        
         if (minute < 10) {
             strMinutes.innerHTML = "0" + minute;
         }
 
         // Each 0.5 second the visibility of flagConsole is changed.
-        if(flagDigital) {
-            if (flagConsole) {
-                strConsole.style.visibility = "visible";
-                flagConsole = false;
-            } else {
-                strConsole.style.visibility = "hidden";
-                flagConsole = true;
-            }
+        strConsole.style.visibility = isTickVisible ? "visible" : "hidden";
+        isTickVisible = !isTickVisible;
+    }
+        
+    function updateStopWatch() {
+        var stopwatchText = document.getElementById("str-elapsedtime");
+        var stopwatchTime = new Date().getTime();
+        if(isStopwatchActive) {
+        	elapsedStopwatchTime += (stopwatchTime - stopwatchStart);
+        	stopwatchStart = stopwatchTime;        	
+        }
+        
+        if(elapsedStopwatchTime === 0){
+        	stopwatchText.innerHTML = "--:--:--.--";
         }
         else {
-            strConsole.style.visibility = "visible";
-            flagConsole = false;
+        	var milliseconds = elapsedStopwatchTime % 1000;
+        	var timeBuffer = Math.floor(elapsedStopwatchTime / 1000);
+        	var hundredths = Math.floor(milliseconds / 10);
+            var seconds = timeBuffer % 60;
+        	timeBuffer = Math.floor(timeBuffer / 60);
+        	var minutes = timeBuffer % 60;
+        	timeBuffer = Math.floor(timeBuffer / 60);
+            var hours = timeBuffer;
+            
+            if(minutes < 10) minutes = "0" + minutes;
+            if(seconds < 10) seconds = "0" + seconds;
+        	if(hundredths < 10) hundredths = "0" + hundredths;
+
+        	
+        	stopwatchText.innerHTML = hours + ":" + minutes + ":" + seconds + "." + hundredths;
         }
+        
     }
 
     /**
@@ -131,20 +146,8 @@
      * @private
      */
     function initDigitalWatch() {
-        flagDigital = true;
         document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
-        interval = setInterval(updateTime, 500);
-    }
-
-    /**
-     * Clears timer and sets background image as none for ambient digital watch mode.
-     * @private
-     */
-    function ambientDigitalWatch() {
-        flagDigital = false;
-        clearInterval(interval);
-        document.getElementById("digital-body").style.backgroundImage = "none";
-        updateTime();
+        timeUpdateInterval = setInterval(updateTime, 500);
     }
 
     /**
@@ -156,7 +159,7 @@
         var batteryLevel = Math.floor(battery.level * 100),
             batteryFill = document.getElementById("battery-fill");
 
-        console.log("Battery: " + batteryLevel)
+        console.log("Battery: " + batteryLevel);
         batteryLevel = batteryLevel + 1;
         batteryFill.style.width = batteryLevel + "%";
     }
@@ -175,6 +178,35 @@
      * @private
      */
     function bindEvents() {
+        // Clickable stopwatch
+        var stopwatch = document.getElementById("rec-stopwatch");
+        var stopwatchText = document.getElementById("str-elapsedtime");
+        stopwatchText.innerHTML = "-:--:--.--"
+        var lastClickTime = 0;
+        stopwatch.addEventListener("click", function() {
+            stopwatchStart = new Date().getTime();
+            if(stopwatchStart - lastClickTime < 200)
+            {
+                elapsedStopwatchTime= 0; 
+                if(isStopwatchActive)
+                {
+                    isStopwatchActive = false;
+                    clearInterval(stopwatchUpdateInterval);
+                }
+                stopwatchText.innerHTML = "-:--:--.--";
+            }
+            else {
+                isStopwatchActive = !isStopwatchActive;
+                if(isStopwatchActive) {
+                    stopwatchUpdateInterval = setInterval(updateStopWatch, 10);
+                }
+                else {
+                    clearInterval(stopwatchUpdateInterval);
+                }
+            }
+            lastClickTime = stopwatchStart;
+        })
+        
         // add eventListener for battery state
         battery.addEventListener("chargingchange", getBatteryState);
         battery.addEventListener("chargingtimechange", getBatteryState);
@@ -209,6 +241,7 @@
         tizen.time.setTimezoneChangeListener(function() {
             updateWatch();
         });
+
     }
 
     /**

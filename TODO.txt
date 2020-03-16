@@ -3,6 +3,9 @@ TODO
 	[x] Show more compact date
 	[x] Change AM/PM to just P if PM
 	[x] Smaller text to make room for functions
+	[x] Stopwatch
+	[ ] Better icon
+	[ ] Maybe replace --:--:--.-- with [chronograph]
 	[ ] One-touch timer
 		slide to quickly change timer time
 		release to start timer
