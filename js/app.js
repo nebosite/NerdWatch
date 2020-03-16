@@ -32,17 +32,10 @@
         // Check the update condition.
         // if prevDate is '0', it will always update the date.
         if (prevDay !== null) {
-            if (prevDay === getDay) {
-                /**
-                 * If the date was not changed (meaning that something went wrong),
-                 * call updateDate again after a second.
-                 */
+            if (prevDay === getDay) { // WHoops, try again!
                 nextInterval = 1000;
-            } else {
-                /**
-                 * If the day was changed,
-                 * call updateDate at the beginning of the next day.
-                 */
+            } 
+            else {
                 // Calculate how much time is left until the next day.
                 nextInterval =
                     (23 - datetime.getHours()) * 60 * 60 * 1000 +
@@ -76,33 +69,25 @@
             strConsole = document.getElementById("str-console"),
             strMinutes = document.getElementById("str-minutes"),
             strAmpm = document.getElementById("str-ampm"),
-            strStopwatch = document.getElementById("str-elapsedtime"),
             datetime = tizen.time.getCurrentDateTime(),
             hour = datetime.getHours(),
             minute = datetime.getMinutes();
 
-        strHours.innerHTML = hour;
-        strMinutes.innerHTML = minute;
 
         if (hour < 12) {
             strAmpm.innerHTML = "A";
-
         } else {
         	hour -= 12;
             strAmpm.innerHTML = "P";
         }
         
-        if(hour === 0)
-        {
-            strHours.innerHTML = "12";
-        }
-        else if (hour < 10) {
-            strHours.innerHTML = "&nbsp;" + hour;
-        }
+        if(hour === 0) hour = "12";
+        else if (hour < 10) hour = "&nbsp;" + hour;
         
-        if (minute < 10) {
-            strMinutes.innerHTML = "0" + minute;
-        }
+        if (minute < 10) minute = "0" + minute;
+
+        strHours.innerHTML = hour;
+        strMinutes.innerHTML = minute;
 
         // Each 0.5 second the visibility of flagConsole is changed.
         strConsole.style.visibility = isTickVisible ? "visible" : "hidden";

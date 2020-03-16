@@ -1,11 +1,18 @@
+Sensor API: https://samsung.github.io/Tizen.NET/wearables/how-to-use-the-GalaxyWatch-sensors/#tizen-net-nuget-package
 
 TODO
 	[x] Show more compact date
 	[x] Change AM/PM to just P if PM
 	[x] Smaller text to make room for functions
 	[x] Stopwatch
+	
+NEW
+	[ ] Night vision mode 
+		- Use red mode when light levels are low
+	[ ] Pee light
 	[ ] Better icon
 	[ ] Maybe replace --:--:--.-- with [chronograph]
+	[ ] nightlight
 	[ ] One-touch timer
 		slide to quickly change timer time
 		release to start timer
@@ -16,3 +23,4 @@ TODO
 	
 	[ ] Curve the time at the top 
 		https://css-tricks.com/snippets/svg/curved-text-along-path/
+
