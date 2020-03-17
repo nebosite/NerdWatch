@@ -164,7 +164,16 @@
     function handleNightlightClick() {
         nightlightOn = !nightlightOn;
         console.log("Clicky " + nightlightOn)
-        document.getElementById("rec-glow").style.opacity = nightlightOn ? "100%" : "0%"; 
+        var glow = document.getElementById("rec-glow");
+        glow.style.visibility = nightlightOn ? "visible" : "hidden";
+        if(nightlightOn) {
+        	// Keep the screen on all the time when the light is on
+        	tizen.power.request("SCREEN", "SCREEN_NORMAL");
+        }
+        else {
+        	tizen.power.release("SCREEN");
+        }
+
     }
 
     //-----------------------------------------------------------------------------

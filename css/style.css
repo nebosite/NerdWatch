@@ -70,7 +70,7 @@ body {
 	height: 10%;
 	  width: 10%;
 	  top:15%;
-	  left:45%;
+	  left: 73%;
       text-align: center;
       font-size: 130%;
 	  
@@ -84,7 +84,7 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    opacity: 0%;
+    visibility: hidden;
     background-color: white;
 }
 /* --------------------- STOPWATCH ---------------------- */
