@@ -5,20 +5,20 @@ TODO
 	[x] Change AM/PM to just P if PM
 	[x] Smaller text to make room for functions
 	[x] Stopwatch
-	
-NEW
+	[x] Better icon
+	[x] Maybe replace --:--:--.-- with [chronograph]
+	[ ] Pee light
 	[ ] Night vision mode 
 		- Use red mode when light levels are low
-	[ ] Pee light
-	[ ] Better icon
-	[ ] Maybe replace --:--:--.-- with [chronograph]
-	[ ] nightlight
 	[ ] One-touch timer
 		slide to quickly change timer time
 		release to start timer
 		tap and hold to stop timer
-		
 	
+NEW
+		
+
+LATER	
 	[ ] Back up stuff in the .sign folder to sekrits
 	
 	[ ] Curve the time at the top 

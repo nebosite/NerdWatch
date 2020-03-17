@@ -1,25 +1,24 @@
-/*
- * NERD WATCH!
- */
-
+//-----------------------------------------------------------------------------
+// NERD WATCH!
+// written by Eric Jorgensen
+//-----------------------------------------------------------------------------
 (function() {
-    var timerUpdateDate = 0,
-        stopwatchStart = 0,
-        isStopwatchActive = false,
-        elapsedStopwatchTime = 0,
-        isTickVisible = false,
-        battery = navigator.battery || navigator.webkitBattery || navigator.mozBattery,
-        timeUpdateInterval,
-        stopwatchUpdateInterval,
-        BACKGROUND_URL = "url('./images/bg.jpg')",
-        arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    	
-
-    /**
-     * Updates the date and sets refresh callback on the next day.
-     * @private
-     * @param {number} prevDay - date of the previous day
-     */
+	const DEFAULT_CHRONO_TEXT = "[chrono]";
+    var timerUpdateDate = 0;
+    var stopwatchStart = 0;
+    var isStopwatchActive = false;
+    var elapsedStopwatchTime = 0;
+    var isTickVisible = false;
+    var battery = navigator.battery || navigator.webkitBattery || navigator.mozBattery;
+    var timeUpdateInterval;
+    var stopwatchUpdateInterval;
+    var BACKGROUND_URL = "url('./images/bg.jpg')";
+    var arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var lastStopwatchClickTime = 0;
+   	
+    //-----------------------------------------------------------------------------
+    // updateDate
+    //-----------------------------------------------------------------------------
     function updateDate(prevDay) {
         var datetime = tizen.time.getCurrentDateTime(),
             nextInterval,
@@ -60,10 +59,9 @@
         }, nextInterval);
     }
 
-    /**
-     * Updates the current time.
-     * @private
-     */
+    //-----------------------------------------------------------------------------
+    // updateTime
+    //-----------------------------------------------------------------------------
     function updateTime() {
         var strHours = document.getElementById("str-hours"),
             strConsole = document.getElementById("str-console"),
@@ -94,6 +92,9 @@
         isTickVisible = !isTickVisible;
     }
         
+    //-----------------------------------------------------------------------------
+    // updateStopWatch
+    //-----------------------------------------------------------------------------
     function updateStopWatch() {
         var stopwatchText = document.getElementById("str-elapsedtime");
         var stopwatchTime = new Date().getTime();
@@ -103,7 +104,7 @@
         }
         
         if(elapsedStopwatchTime === 0){
-        	stopwatchText.innerHTML = "--:--:--.--";
+        	stopwatchText.innerHTML = DEFAULT_CHRONO_TEXT;
         }
         else {
         	var milliseconds = elapsedStopwatchTime % 1000;
@@ -125,22 +126,41 @@
         
     }
 
-    /**
-     * Sets to background image as BACKGROUND_URL,
-     * and starts timer for normal digital watch mode.
-     * @private
-     */
-    function initDigitalWatch() {
-        document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
-        timeUpdateInterval = setInterval(updateTime, 500);
+    //-----------------------------------------------------------------------------
+    // handleStopwatchClick
+    //-----------------------------------------------------------------------------
+    function handleStopwatchClick() {
+        stopwatchStart = new Date().getTime();
+
+        var doubleClicked = (stopwatchStart - lastStopwatchClickTime) < 200;
+        lastStopwatchClickTime = stopwatchStart;
+        
+        if(doubleClicked)
+        {
+            elapsedStopwatchTime= 0; 
+            if(isStopwatchActive)
+            {
+                isStopwatchActive = false;
+                clearInterval(stopwatchUpdateInterval);
+            }
+            var stopwatchText = document.getElementById("str-elapsedtime");
+            stopwatchText.innerHTML = DEFAULT_CHRONO_TEXT;
+        }
+        else {
+            isStopwatchActive = !isStopwatchActive;
+            if(isStopwatchActive) {
+                stopwatchUpdateInterval = setInterval(updateStopWatch, 10);
+            }
+            else {
+                clearInterval(stopwatchUpdateInterval);
+            }
+        }
     }
 
-    /**
-     * Gets battery state.
-     * Updates battery level.
-     * @private
-     */
-    function getBatteryState() {
+    //-----------------------------------------------------------------------------
+    // Get Battery State
+    //-----------------------------------------------------------------------------
+    function updateBatteryState() {
         var batteryLevel = Math.floor(battery.level * 100),
             batteryFill = document.getElementById("battery-fill");
 
@@ -149,95 +169,56 @@
         batteryFill.style.width = batteryLevel + "%";
     }
 
-    /**
-     * Updates watch screen. (time and date)
-     * @private
-     */
-    function updateWatch() {
+    //-----------------------------------------------------------------------------
+    // Update all the information right now
+    //-----------------------------------------------------------------------------
+    function updateNow() {
         updateTime();
         updateDate(0);
+        updateBatteryState();
     }
 
-    /**
-     * Binds events.
-     * @private
-     */
+    //-----------------------------------------------------------------------------
+    // Bind Events
+    //-----------------------------------------------------------------------------
     function bindEvents() {
+        // Clock updates every 500 ms
+        timeUpdateInterval = setInterval(updateTime, 500);
+
         // Clickable stopwatch
         var stopwatch = document.getElementById("rec-stopwatch");
         var stopwatchText = document.getElementById("str-elapsedtime");
-        stopwatchText.innerHTML = "-:--:--.--"
-        var lastClickTime = 0;
-        stopwatch.addEventListener("click", function() {
-            stopwatchStart = new Date().getTime();
-            if(stopwatchStart - lastClickTime < 200)
-            {
-                elapsedStopwatchTime= 0; 
-                if(isStopwatchActive)
-                {
-                    isStopwatchActive = false;
-                    clearInterval(stopwatchUpdateInterval);
-                }
-                stopwatchText.innerHTML = "-:--:--.--";
-            }
-            else {
-                isStopwatchActive = !isStopwatchActive;
-                if(isStopwatchActive) {
-                    stopwatchUpdateInterval = setInterval(updateStopWatch, 10);
-                }
-                else {
-                    clearInterval(stopwatchUpdateInterval);
-                }
-            }
-            lastClickTime = stopwatchStart;
-        })
-        
-        // add eventListener for battery state
-        battery.addEventListener("chargingchange", getBatteryState);
-        battery.addEventListener("chargingtimechange", getBatteryState);
-        battery.addEventListener("dischargingtimechange", getBatteryState);
-        battery.addEventListener("levelchange", getBatteryState);
+        stopwatchText.innerHTML = DEFAULT_CHRONO_TEXT;
+        stopwatch.addEventListener("click", handleStopwatchClick);
 
-        // add eventListener for timetick
-        window.addEventListener("timetick", function() {
-            ambientDigitalWatch();
-        });
+        // battery state
+        battery.addEventListener("chargingchange", updateBatteryState);
+        battery.addEventListener("chargingtimechange", updateBatteryState);
+        battery.addEventListener("dischargingtimechange", updateBatteryState);
+        battery.addEventListener("levelchange", updateBatteryState);
 
-        // add eventListener for ambientmodechanged
+        // ambientmodechanged
         window.addEventListener("ambientmodechanged", function(e) {
-            if (e.detail.ambientMode === true) {
-                // rendering ambient mode case
-                ambientDigitalWatch();
-
-            } else {
-                // rendering normal digital mode case
-                initDigitalWatch();
-            }
+            console.log("Ambient mode is "  + (e.detail.ambientMode ? "ON" :"OFF"))
         });
 
-        // add eventListener to update the screen immediately when the device wakes up.
+        // Update on wakeup
         document.addEventListener("visibilitychange", function() {
-            if (!document.hidden) {
-                updateWatch();
-            }
+            if (!document.hidden) updateNow();
         });
 
-        // add event listeners to update watch screen when the time zone is changed.
+        // update on timezone change
         tizen.time.setTimezoneChangeListener(function() {
-            updateWatch();
+            updateNow();
         });
-
     }
 
-    /**
-     * Initializes date and time.
-     * Sets to digital mode.
-     * @private
-     */
+    //-----------------------------------------------------------------------------
+    // Initialize everything and go!
+    //-----------------------------------------------------------------------------
     function init() {
-        initDigitalWatch();
+        document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
         updateDate(0);
-
         bindEvents();
     }
 
