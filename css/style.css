@@ -65,7 +65,7 @@ body {
 }
 
 /* --------------------- FLASHLIGHT ---------------------- */
-#flashlight {
+#button-flashlight {
     position: absolute;
 	height: 10%;
 	  width: 10%;
@@ -85,6 +85,7 @@ body {
     width: 100%;
     height: 100%;
     opacity: 0%;
+    background-color: white;
 }
 /* --------------------- STOPWATCH ---------------------- */
 #rec-stopwatch {

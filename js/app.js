@@ -15,6 +15,7 @@
     var BACKGROUND_URL = "url('./images/bg.jpg')";
     var arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var lastStopwatchClickTime = 0;
+    var nightlightOn = false;
    	
     //-----------------------------------------------------------------------------
     // updateDate
@@ -158,6 +159,15 @@
     }
 
     //-----------------------------------------------------------------------------
+    // handleNightlightClick
+    //-----------------------------------------------------------------------------
+    function handleNightlightClick() {
+        nightlightOn = !nightlightOn;
+        console.log("Clicky " + nightlightOn)
+        document.getElementById("rec-glow").style.opacity = nightlightOn ? "100%" : "0%"; 
+    }
+
+    //-----------------------------------------------------------------------------
     // Get Battery State
     //-----------------------------------------------------------------------------
     function updateBatteryState() {
@@ -190,6 +200,10 @@
         var stopwatchText = document.getElementById("str-elapsedtime");
         stopwatchText.innerHTML = DEFAULT_CHRONO_TEXT;
         stopwatch.addEventListener("click", handleStopwatchClick);
+
+        // Night Light
+        var lightButton = document.getElementById("button-flashlight");
+        lightButton.addEventListener("click", handleNightlightClick);
 
         // battery state
         battery.addEventListener("chargingchange", updateBatteryState);

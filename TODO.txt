@@ -7,7 +7,7 @@ TODO
 	[x] Stopwatch
 	[x] Better icon
 	[x] Maybe replace --:--:--.-- with [chronograph]
-	[ ] Pee light
+	[x] Night light
 	[ ] Night vision mode 
 		- Use red mode when light levels are low
 	[ ] One-touch timer
