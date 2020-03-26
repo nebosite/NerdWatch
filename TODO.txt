@@ -8,8 +8,9 @@ TODO
 	[x] Better icon
 	[x] Maybe replace --:--:--.-- with [chronograph]
 	[x] Night light
-	[ ] Night vision mode 
+	[x] Night vision mode 
 		- Use red mode when light levels are low
+		
 	[ ] One-touch timer
 		slide to quickly change timer time
 		release to start timer

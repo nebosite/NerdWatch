@@ -3,7 +3,7 @@
 // written by Eric Jorgensen
 //-----------------------------------------------------------------------------
 (function() {
-	const DEFAULT_CHRONO_TEXT = "[chrono]";
+	const DEFAULT_CHRONO_TEXT = "0:00:00.00";
     var timerUpdateDate = 0;
     var stopwatchStart = 0;
     var isStopwatchActive = false;
@@ -16,7 +16,59 @@
     var arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var lastStopwatchClickTime = 0;
     var nightlightOn = false;
-   	
+    var lightSensorValue = 0;
+    
+    var sensor = null;
+    var MAX_SIGNAL_STRENGTH = 65535;
+    
+    //-----------------------------------------------------------------------------
+    // setColors
+    //-----------------------------------------------------------------------------
+    function setColors() {
+        var body = document.getElementById("digital-body");
+        var battery = document.getElementById("battery-fill");
+
+        var color = "white";
+        var batteryColor = "#00a6ff";
+        if(nightlightOn) {
+            color = "gray";
+        }
+        else if(lightSensorValue == 0) {
+            color = "red";
+            batteryColor = "#FF4040";
+        }
+
+        body.style.color = color;
+        body.style.borderColor = color;   
+        battery.style.backgroundColor = batteryColor;     
+    }
+
+    //-----------------------------------------------------------------------------
+    // getSensorValue
+    //-----------------------------------------------------------------------------
+    function getSensorValue(lightSensorCallback) {
+        if (!sensor) {
+            return;
+        }
+
+        sensor.start(
+            function onSensorStart() {
+                sensor.getLightSensorData(
+                    lightSensorCallback,
+                    function onError(err) {
+                        console.error('Getting light sensor data failed.',
+                            err.message);
+                    }
+                );
+                sensor.stop();
+            },
+            function onError(err) {
+                console.error('Could not start light sensor.',
+                    err.message);
+            }
+        );
+    }
+    
     //-----------------------------------------------------------------------------
     // updateDate
     //-----------------------------------------------------------------------------
@@ -72,7 +124,11 @@
             hour = datetime.getHours(),
             minute = datetime.getMinutes();
 
-
+        getSensorValue(function(data){
+            lightSensorValue = data.lightLevel;
+        	console.log("Light Sensor data: " + data);
+        })
+        
         if (hour < 12) {
             strAmpm.innerHTML = "A";
         } else {
@@ -91,6 +147,8 @@
         // Each 0.5 second the visibility of flagConsole is changed.
         strConsole.style.visibility = isTickVisible ? "visible" : "hidden";
         isTickVisible = !isTickVisible;
+
+        setColors();
     }
         
     //-----------------------------------------------------------------------------
@@ -173,7 +231,7 @@
         else {
         	tizen.power.release("SCREEN");
         }
-
+        setColors();
     }
 
     //-----------------------------------------------------------------------------
@@ -201,6 +259,7 @@
     // Bind Events
     //-----------------------------------------------------------------------------
     function bindEvents() {
+    	
         // Clock updates every 500 ms
         timeUpdateInterval = setInterval(updateTime, 500);
 
@@ -242,6 +301,13 @@
     function init() {
         document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
         updateDate(0);
+        try {
+            sensor = tizen.sensorservice.getDefaultSensor('LIGHT');
+        } catch (err) {
+            console.error('Could not access light sensor.',
+                err.message);
+        }
+
         bindEvents();
     }
 

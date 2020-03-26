@@ -13,6 +13,9 @@ body {
     background-repeat: no-repeat;
     overflow: hidden;
     font-size: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    border-color: white;
 }
 
 /* --------------------- Battery ---------------------- */
@@ -45,21 +48,17 @@ body {
 
 #str-hours {
     float: left;
-    color: white;
 }
 
 #str-console {
     float: left;
-    color: white;
 }
 
 #str-minutes {
     float: left;
-    color: white;
 }
 
 #str-ampm {
-    color: white;
     padding-top: 19%;
     font-size: 40%;
 }
@@ -75,8 +74,7 @@ body {
       font-size: 130%;
 	  
 	  border-radius: 50%;
-	  border: solid 2px white;
-      border-color: white;
+	  border: solid 2px;
 	  display: inline-block;
 }
 
@@ -90,16 +88,15 @@ body {
 /* --------------------- STOPWATCH ---------------------- */
 #rec-stopwatch {
     position: absolute;
-    top: 80%;
+    top: 25%;
     width: 30%;
     height: 10%;
-    left: 35%;
+    left: 12%;
 
 }
 
 #str-elapsedtime {
     float: left;
-    color: white;
     width: 100%;
     font-size: 120%;
     text-align: center;
@@ -113,7 +110,6 @@ body {
 }
 
 #str-day {
-    color: white;
     float: left;
 }
 /*
