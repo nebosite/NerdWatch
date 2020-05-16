@@ -20,6 +20,18 @@
     
     var sensor = null;
     var MAX_SIGNAL_STRENGTH = 65535;
+
+    //-----------------------------------------------------------------------------
+    // setColors
+    //-----------------------------------------------------------------------------
+    function debugPrint(text)
+    {
+        var debugElement = document.getElementById("debug-text");
+        debugElement.innerHTML = text + "<br>" + debugElement.innerHTML;  
+        if(debugElement.innerHTML.length > 1000) {
+            debugElement.innerHTML = debugElement.innerHTML.substr(0,500);
+        }
+    }
     
     //-----------------------------------------------------------------------------
     // setColors
@@ -56,6 +68,7 @@
                 sensor.getLightSensorData(
                     lightSensorCallback,
                     function onError(err) {
+                        debugPrint("Sensor Error: " + err.message);
                         console.error('Getting light sensor data failed.',
                             err.message);
                     }
@@ -63,6 +76,7 @@
                 sensor.stop();
             },
             function onError(err) {
+                debugPrint("Couln't start light sensor: " + err.message);
                 console.error('Could not start light sensor.',
                     err.message);
             }
@@ -112,6 +126,7 @@
         }, nextInterval);
     }
 
+    countt = 0;
     //-----------------------------------------------------------------------------
     // updateTime
     //-----------------------------------------------------------------------------
@@ -126,7 +141,6 @@
 
         getSensorValue(function(data){
             lightSensorValue = data.lightLevel;
-        	console.log("Light Sensor data: " + data);
         })
         
         if (hour < 12) {
@@ -214,6 +228,15 @@
                 clearInterval(stopwatchUpdateInterval);
             }
         }
+
+        if(isStopwatchActive) {
+        	// Keep the screen on all while the stopwatch is running
+        	tizen.power.request("SCREEN", "SCREEN_NORMAL");
+        }
+        else {
+        	tizen.power.release("SCREEN");
+        }
+
     }
 
     //-----------------------------------------------------------------------------

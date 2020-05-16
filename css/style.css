@@ -12,7 +12,7 @@ body {
     background-size: 100%;
     background-repeat: no-repeat;
     overflow: hidden;
-    font-size: 20px;
+    font-size: 25px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: white;
     border-color: white;
@@ -23,7 +23,7 @@ body {
     position: absolute;
     width: 17%;
     height: 3%;
-    top: 55%;
+    top: 60%;
     left: 5%;
     border: solid 2px white;
     border-color: gray;
@@ -37,11 +37,22 @@ body {
     background-color: #00a6ff;
 }
 
+/* --------------------- DEBUG ---------------------- */
+#debug-text {
+    position: absolute;
+    top: 50%;
+    width: 65%;
+    height: 50%;
+    left: 30%;
+    font-size: 50%;
+}
+
+
 /* --------------------- TIME ---------------------- */
 #rec-time {
     position: absolute;
     top: 30%;
-    width: 50%;
+    width: 65%;
     left: 8%;
     font-size: 300%;
 }
@@ -66,10 +77,10 @@ body {
 /* --------------------- FLASHLIGHT ---------------------- */
 #button-flashlight {
     position: absolute;
-	height: 10%;
-	  width: 10%;
+	height: 15%;
+	  width: 15%;
 	  top:15%;
-	  left: 73%;
+	  left: 70%;
       text-align: center;
       font-size: 130%;
 	  
@@ -105,7 +116,7 @@ body {
 /* --------------------- DATE ---------------------- */
 #rec-date {
     position: absolute;
-    top: 48%;
+    top: 50%;
     left: 5%;
 }
 
