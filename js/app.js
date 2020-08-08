@@ -1,3 +1,26 @@
+console.log("Hi there")
+if(typeof tizen !== 'undefined') {
+    console.log("Tizen is defined: " + tizen)
+}
+else {
+    console.log("Setting to fake tizen")
+    var tizen = {
+        time: {
+            getCurrentDateTime: function () { 
+                return new Date(Date.now());
+            },
+            setTimezoneChangeListener: function (callMe) {}
+        },
+        sensorservice: {
+            getDefaultSensor: function (sensorName) {
+                switch(sensorName) {
+                    case "LIGHT": return { start: function () {}}
+                }
+            }
+        }
+    }
+}
+
 //-----------------------------------------------------------------------------
 // NERD WATCH!
 // written by Eric Jorgensen
@@ -17,7 +40,16 @@
     var lastStopwatchClickTime = 0;
     var nightlightOn = false;
     var lightSensorValue = 0;
-    
+
+    if(typeof battery === 'undefined') {
+        battery =  {
+            _foo: "Hi",
+            addEventListener: function (name, callMe) {
+                console.log("Adding listener: " + name)
+            }
+        };
+    }
+    console.log("BATTERY: " + JSON.stringify(battery))
     var sensor = null;
     var MAX_SIGNAL_STRENGTH = 65535;
 
@@ -87,18 +119,18 @@
     // updateDate
     //-----------------------------------------------------------------------------
     function updateDate(prevDay) {
-        var datetime = tizen.time.getCurrentDateTime(),
-            nextInterval,
-            strDay = document.getElementById("str-day"),
-            strFullDate,
-            getDay = datetime.getDay(),
-            getDate = datetime.getDate(),
-            getMonth = datetime.getMonth();
+        var datetime = tizen.time.getCurrentDateTime();
+        var nextInterval;
+        var strDay = document.getElementById("str-day");
+        var strFullDate;
+        var day = datetime.getDay();
+        var theDate = datetime.getDate();
+        var month = datetime.getMonth();
 
         // Check the update condition.
         // if prevDate is '0', it will always update the date.
         if (prevDay !== null) {
-            if (prevDay === getDay) { // WHoops, try again!
+            if (prevDay === day) { // WHoops, try again!
                 nextInterval = 1000;
             } 
             else {
@@ -112,7 +144,7 @@
             }
         }
 
-        strFullDate = arrMonth[getMonth] + " " + getDate;
+        strFullDate = arrMonth[month] + " " + theDate;
         strDay.innerHTML = strFullDate;
 
         // If an updateDate timer already exists, clear the previous timer.
@@ -122,7 +154,7 @@
 
         // Set next timeout for date update.
         timerUpdateDate = setTimeout(function() {
-            updateDate(getDay);
+            updateDate(day);
         }, nextInterval);
     }
 
