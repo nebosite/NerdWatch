@@ -1,13 +1,53 @@
+//-----------------------------------------------------------------------------
+// NERD WATCH!
+// written by Eric Jorgensen
+//-----------------------------------------------------------------------------
+
+const METERS_PER_MILE = 1609.344;
+
+//-----------------------------------------------------------------------------
+// Random number helper
+//-----------------------------------------------------------------------------
+function rnd(max) {
+    return Math.floor(Math.random() * max);
+}
+
+//-----------------------------------------------------------------------------
+// Object Helper
+//-----------------------------------------------------------------------------
+function clone(thing) {
+    var output = {}
+    for(let propertyName in thing) {
+        output[propertyName] = thing[propertyName];
+    }
+    return output;
+}
+
+//-----------------------------------------------------------------------------
+// pad string on the left
+//-----------------------------------------------------------------------------
+function padLeft(text, width, padChar) {
+    padChar = padChar || '0';
+    text = text + '';
+    return text.length >= width ? text : new Array(width - text.length + 1).join(padChar) + text;
+}
+
 console.log("Hi there")
 if(typeof tizen !== 'undefined') {
     console.log("Tizen is defined: " + tizen)
 }
 else {
     console.log("Setting to fake tizen")
+    var hour = 8;
+    var minute = 8;
     var tizen = {
         time: {
             getCurrentDateTime: function () { 
-                return new Date(Date.now());
+                hour++;
+                minute++;
+                if(hour > 15) hour = 8;
+                if(minute > 22) minute = 8;
+                return new Date(`2020-12-17 ${hour}:${minute}`);
             },
             setTimezoneChangeListener: function (callMe) {}
         },
@@ -17,13 +57,55 @@ else {
                     case "LIGHT": return { start: function () {}}
                 }
             }
+        },
+        ppm : {
+            requestPermission(permissionId ,onHealthInfoSucceeded, onHealthInfoError) {
+                console.debug(`Requested Permission for ${permissionId}`)
+                onHealthInfoSucceeded();
+            }
+        },
+        humanactivitymonitor : {
+            start(name, callMe, onError) {
+                switch(name) {
+                    case "PEDOMETER" : 
+                        console.log("Setting Fake Pedometer")
+                        var pedData = {
+                            stepStatus: "NOT_MOVING",
+                            cumulativeTotalStepCount: 2,
+                            cumulativeWalkStepCount: 2,
+                            cumulativeRunStepCount: 2,
+                            cumulativeCalorie: 2,
+                            cumulativeDistance: 2,   
+                        }
+                        var currentCount = 0;
+                        setInterval(() => {
+                            currentCount--;
+                            if(currentCount < 0) {
+                                currentCount = rnd(5) + 3;
+                                pedData.stepStatus = ["NOT_MOVING", "WALKING", "RUNNING"][rnd(3)];
+                            }
+                            pedData.cumulativeWalkStepCount += 5 + Math.floor(pedData.cumulativeWalkStepCount * .123231)
+                            pedData.cumulativeRunStepCount += 5 + Math.floor(pedData.cumulativeWalkStepCount * .143443)
+                            pedData.cumulativeTotalStepCount = pedData.cumulativeWalkStepCount + pedData.cumulativeRunStepCount
+                            if(pedData.cumulativeTotalStepCount > 20000) {
+                                pedData.cumulativeWalkStepCount = 0;
+                                pedData.cumulativeRunStepCount = 0;
+                                pedData.cumulativeTotalStepCount  =0;
+                            }
+                            pedData.cumulativeDistance += pedData.cumulativeTotalStepCount * .2;
+                            pedData.cumulativeCalorie = pedData.cumulativeTotalStepCount * .0334234;
+                            
+                            callMe(clone(pedData))
+                        },1000)
+                        break;
+                }
+            }
         }
     }
 }
 
 //-----------------------------------------------------------------------------
-// NERD WATCH!
-// written by Eric Jorgensen
+// Main Functionality here
 //-----------------------------------------------------------------------------
 (function() {
 	const DEFAULT_CHRONO_TEXT = "0:00:00.00";
@@ -50,7 +132,7 @@ else {
         };
     }
     console.log("BATTERY: " + JSON.stringify(battery))
-    var sensor = null;
+    var lightSensor = null;
     var MAX_SIGNAL_STRENGTH = 65535;
 
     //-----------------------------------------------------------------------------
@@ -59,10 +141,11 @@ else {
     function debugPrint(text)
     {
         var debugElement = document.getElementById("debug-text");
-        debugElement.innerHTML = text + "<br>" + debugElement.innerHTML;  
-        if(debugElement.innerHTML.length > 1000) {
-            debugElement.innerHTML = debugElement.innerHTML.substr(0,500);
-        }
+        debugElement.innerHTML = text.replace(/\n/g, "<br>");
+        // debugElement.innerHTML = text + "<br>" + debugElement.innerHTML;  
+        // if(debugElement.innerHTML.length > 1000) {
+        //     debugElement.innerHTML = debugElement.innerHTML.substr(0,500);
+        // }
     }
     
     //-----------------------------------------------------------------------------
@@ -91,13 +174,13 @@ else {
     // getSensorValue
     //-----------------------------------------------------------------------------
     function getSensorValue(lightSensorCallback) {
-        if (!sensor) {
+        if (!lightSensor) {
             return;
         }
 
-        sensor.start(
+        lightSensor.start(
             function onSensorStart() {
-                sensor.getLightSensorData(
+                lightSensor.getLightSensorData(
                     lightSensorCallback,
                     function onError(err) {
                         debugPrint("Sensor Error: " + err.message);
@@ -105,7 +188,7 @@ else {
                             err.message);
                     }
                 );
-                sensor.stop();
+                lightSensor.stop();
             },
             function onError(err) {
                 debugPrint("Couln't start light sensor: " + err.message);
@@ -151,6 +234,18 @@ else {
         if (timerUpdateDate) {
             clearTimeout(timerUpdateDate);
         }
+
+        debugPrint(
+        `Heart rate: _TODO_ bpm`
+        + `\nLight: _TODO_, UV: _TODO_`
+        + `\nAcc: Linear _TODO_, Gyro _TODO_, Grav _TODO_`
+        + `\nMagnet: _TODO_`
+        + `\nPressure: _TODO_, Altitude _TODO_`
+        + `\nTemperature: _TODO_`
+        + `\nProximity: _TODO_`
+        + `\nAvailable: _TODO_`
+        + `\nBattery: _TODO_`
+        )
 
         // Set next timeout for date update.
         timerUpdateDate = setTimeout(function() {
@@ -271,6 +366,7 @@ else {
 
     }
 
+
     //-----------------------------------------------------------------------------
     // handleNightlightClick
     //-----------------------------------------------------------------------------
@@ -310,6 +406,102 @@ else {
         updateBatteryState();
     }
 
+    var healthAvailable = false;
+    //-----------------------------------------------------------------------------
+    // Get steps information
+    //-----------------------------------------------------------------------------
+    function pingHeartRate()
+    {
+        if(healthAvailable) {
+            tizen.humanactivitymonitor.start('HRM', function (hrmInfo) {
+                console.log(`heart rate:` + hrmInfo.heartRate);
+                tizen.humanactivitymonitor.stop('HRM');
+            });            
+        }
+    }
+
+    var stepsSnapshot = null;
+    var lastStepsReading = null;
+    var stepsSnapshotTime = 0;
+
+    //-----------------------------------------------------------------------------
+    // showStepData
+    // data is a HumanActivityPedometerData object
+    //-----------------------------------------------------------------------------
+    function showStepData(data)
+    {
+        lastStepsReading = clone(data);
+        var stepsWindow = document.getElementById("rec-steps");
+        var miles = Math.floor(data.cumulativeDistance * 10.0 / METERS_PER_MILE)/10.0;
+        var delta = null;
+        if(stepsSnapshot) {
+            delta = {};
+            for(let propertyName in stepsSnapshot) {
+                delta[propertyName] = lastStepsReading[propertyName] - stepsSnapshot[propertyName];
+            }
+        }
+
+        var line1 = `🦶 ${data.cumulativeTotalStepCount}`;
+        if(delta) line1 += ` +${delta.cumulativeTotalStepCount}`;
+    
+        var line2 = `${miles} mi`;
+        if(delta) {
+            var deltamiles = Math.floor(delta.cumulativeDistance * 10.0 / METERS_PER_MILE)/10.0;
+            line2 += ` +${deltamiles}`;
+        }
+
+        var line3 = `cal: ${Math.floor(data.cumulativeCalorie)}`;
+        if(delta) line3 += ` +${Math.floor(delta.cumulativeCalorie)}`;
+
+        var line4 = "";
+        if(delta) {
+            console.log(stepsSnapshotTime)
+            var seconds = Math.floor((Date.now() - stepsSnapshotTime)/1000.0);
+            var minutes = Math.floor(seconds/60);
+            seconds = seconds % 60;
+            line4 = `${padLeft(minutes,2)}:${padLeft(seconds,2)}`
+        }
+
+        stepsWindow.innerHTML = `${line1}<br>${line2}<br>${line3}<br>${line4}`
+    }
+
+    //-----------------------------------------------------------------------------
+    // Generic error reporter
+    //-----------------------------------------------------------------------------
+    function reportError(err) {
+        console.log("Error: " + err);
+    }
+
+    //-----------------------------------------------------------------------------
+    // Initialize everything and go!
+    //-----------------------------------------------------------------------------
+    function init() {
+        document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
+        updateDate(0);
+
+        // Set up objects
+        try {
+            lightSensor = tizen.sensorservice.getDefaultSensor('LIGHT');
+        } catch (err) {
+            console.error('Could not access light sensor.',
+                err.message);
+        }
+
+        // Sign up to read services
+        // These should be listed in config.xml
+        tizen.ppm.requestPermission(
+            "http://tizen.org/privilege/healthinfo",
+            () => {
+                healthAvailable = true
+                tizen.humanactivitymonitor.start("PEDOMETER", showStepData, reportError); 
+            }, 
+            (e) => {
+                console.log("Healthinfo error " + JSON.stringify(e))
+            });
+
+        bindEvents();
+    }
+
     //-----------------------------------------------------------------------------
     // Bind Events
     //-----------------------------------------------------------------------------
@@ -323,6 +515,13 @@ else {
         var stopwatchText = document.getElementById("str-elapsedtime");
         stopwatchText.innerHTML = DEFAULT_CHRONO_TEXT;
         stopwatch.addEventListener("click", handleStopwatchClick);
+
+        // Clickable steps
+        var stepsRec = document.getElementById("rec-steps");
+        stepsRec.addEventListener("click", () => {
+            stepsSnapshot = lastStepsReading;
+            stepsSnapshotTime = Date.now();
+        });
 
         // Night Light
         var lightButton = document.getElementById("button-flashlight");
@@ -348,22 +547,6 @@ else {
         tizen.time.setTimezoneChangeListener(function() {
             updateNow();
         });
-    }
-
-    //-----------------------------------------------------------------------------
-    // Initialize everything and go!
-    //-----------------------------------------------------------------------------
-    function init() {
-        document.getElementById("digital-body").style.backgroundImage = BACKGROUND_URL;
-        updateDate(0);
-        try {
-            sensor = tizen.sensorservice.getDefaultSensor('LIGHT');
-        } catch (err) {
-            console.error('Could not access light sensor.',
-                err.message);
-        }
-
-        bindEvents();
     }
 
     window.onload = init();

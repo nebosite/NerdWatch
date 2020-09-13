@@ -1,6 +1,35 @@
 Sensor API: https://samsung.github.io/Tizen.NET/wearables/how-to-use-the-GalaxyWatch-sensors/#tizen-net-nuget-package
+HumanActivityMonitor API: https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html
+
 
 TODO
+		
+	
+NEW
+	[ ] Use GPS to alert you when you return to a place you marked
+	[ ] Touching output window should switch between display modes
+		Steps detail
+		Timer detail
+		Debug detail
+	[ ] Double-tap steps to activate a short delta
+	[ ] Single-tap time to push current timer to memory (auto change display mode and put time there)
+		tap-hold to reset timer
+		Single-top to resume timer	
+
+LATER	
+	[ ] One-touch timer
+		slide to quickly change timer time
+		release to start timer
+		tap and hold to stop timer
+	[ ] Back up stuff in the .sign folder to sekrits
+	
+	[ ] Curve the time at the top 
+		https://css-tricks.com/snippets/svg/curved-text-along-path/
+
+
+DONE -----------------------------------------------------------
+[x] Find Fonts
+	https://www.1001fonts.com/
 	[x] Show more compact date
 	[x] Change AM/PM to just P if PM
 	[x] Smaller text to make room for functions
@@ -10,18 +39,3 @@ TODO
 	[x] Night light
 	[x] Night vision mode 
 		- Use red mode when light levels are low
-		
-	[ ] One-touch timer
-		slide to quickly change timer time
-		release to start timer
-		tap and hold to stop timer
-	
-NEW
-		
-
-LATER	
-	[ ] Back up stuff in the .sign folder to sekrits
-	
-	[ ] Curve the time at the top 
-		https://css-tricks.com/snippets/svg/curved-text-along-path/
-
