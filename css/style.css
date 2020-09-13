@@ -6,9 +6,9 @@
 
 @font-face {
     font-family: dotfont;
-    src: url(Arcade.ttf);  
+    /* src: url(Arcade.ttf);   */
     /* src: url(abduction2002.ttf);   */
-    /* src: url(PICHABS_.ttf);   */
+    src: url(PICHABS_.ttf);  
 }
 @font-face {
     font-family: tinyfont;
@@ -162,10 +162,10 @@ body {
 #rec-steps {
     position: absolute;
     top: 57%;
-    width: 24%;
+    width: 28%;
     height: 15%;
     left: 4%;
-    font-size: 45%;
+    font-size: 55%;
     border: 2px;
     border-radius: 5%;
     /* border: solid 1px;

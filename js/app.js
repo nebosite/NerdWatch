@@ -51,6 +51,10 @@ else {
             },
             setTimezoneChangeListener: function (callMe) {}
         },
+        power: {
+            request() {},
+            release() {}
+        },
         sensorservice: {
             getDefaultSensor: function (sensorName) {
                 switch(sensorName) {
@@ -121,7 +125,7 @@ else {
     var arrMonth = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var lastStopwatchClickTime = 0;
     var nightlightOn = false;
-    var lightSensorValue = 0;
+    var lightSensorValue = 100;
 
     if(typeof battery === 'undefined') {
         battery =  {
@@ -462,7 +466,7 @@ else {
             line4 = `${padLeft(minutes,2)}:${padLeft(seconds,2)}`
         }
 
-        stepsWindow.innerHTML = `${line1}<br>${line2}<br>${line3}<br>${line4}`
+        stepsWindow.innerHTML = `${line1}<br>${line2}<br>&nbsp;${line3}<br>&nbsp;&nbsp;${line4}`
     }
 
     //-----------------------------------------------------------------------------
@@ -519,8 +523,11 @@ else {
         // Clickable steps
         var stepsRec = document.getElementById("rec-steps");
         stepsRec.addEventListener("click", () => {
-            stepsSnapshot = lastStepsReading;
-            stepsSnapshotTime = Date.now();
+            if(stepsSnapshot) stepsSnapshot = null;
+            else {
+                stepsSnapshot = lastStepsReading;
+                stepsSnapshotTime = Date.now();
+            }
         });
 
         // Night Light
