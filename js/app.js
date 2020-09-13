@@ -32,7 +32,7 @@ function padLeft(text, width, padChar) {
     return text.length >= width ? text : new Array(width - text.length + 1).join(padChar) + text;
 }
 
-console.log("Hi there")
+
 if(typeof tizen !== 'undefined') {
     console.log("Tizen is defined: " + tizen)
 }
@@ -135,7 +135,7 @@ else {
             }
         };
     }
-    console.log("BATTERY: " + JSON.stringify(battery))
+
     var lightSensor = null;
     var MAX_SIGNAL_STRENGTH = 65535;
 
@@ -396,7 +396,6 @@ else {
         var batteryLevel = Math.floor(battery.level * 100),
             batteryFill = document.getElementById("battery-fill");
 
-        console.log("Battery: " + batteryLevel);
         batteryLevel = batteryLevel + 1;
         batteryFill.style.width = batteryLevel + "%";
     }
@@ -459,7 +458,6 @@ else {
 
         var line4 = "";
         if(delta) {
-            console.log(stepsSnapshotTime)
             var seconds = Math.floor((Date.now() - stepsSnapshotTime)/1000.0);
             var minutes = Math.floor(seconds/60);
             seconds = seconds % 60;
