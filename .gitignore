@@ -1,0 +1,15 @@
+# Gradle / Android build output — matches any module's build dir
+build/
+.gradle/
+.cxx/
+.externalNativeBuild/
+/captures
+
+# Machine-specific
+local.properties
+*.iml
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

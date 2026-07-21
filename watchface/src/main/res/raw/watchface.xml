@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WatchFace width="450" height="450" clipShape="CIRCLE">
+
+    <Metadata key="CLOCK_TYPE" value="DIGITAL" />
+    <Metadata key="PREVIEW_TIME" value="10:08:32" />
+
+    <Scene backgroundColor="#0b0b0b">
+
+        <PartText x="0" y="175" width="450" height="110">
+            <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="96" color="#39ff6a">
+                    <!--
+                      The ":" must live in the template literal, not the expression.
+                      WFF expressions use ":" as the ternary operator, so
+                      "[HOUR_0_23]:[MINUTE_Z]" parses as a broken conditional and
+                      renders the literal text "false".
+                    -->
+                    <Template>%s:%s<Parameter expression="[HOUR_0_23]" /><Parameter expression="[MINUTE_Z]" /></Template>
+                </Font>
+            </Text>
+        </PartText>
+
+    </Scene>
+
+</WatchFace>

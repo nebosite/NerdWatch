@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!-- hasCode="false" is mandatory: WFF bundles are resource-only. -->
+    <application
+        android:hasCode="false"
+        android:label="@string/watch_face_name">
+
+        <!--
+          Format version 2 targets Wear OS 5. Docs say to use the LOWEST version
+          that supports the features in use; a plain TimeText needs nothing newer,
+          and a lower number reaches more watches.
+        -->
+        <property
+            android:name="com.google.wear.watchface.format.version"
+            android:value="2" />
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
+    </application>
+
+</manifest>
