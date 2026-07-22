@@ -77,8 +77,29 @@ design discussion before assuming any element can live on the dial.
     6 emulator: battery, date, hairlines, glowing time with fixed-width cells,
     bordered seconds box, STEPS/TEMP cells, NEXT chip, conformal button bar.
     Live clock; other values still the design's reference data.
-  - *Next:* CHRON + the long-press arc, then LIGHT, then TIMER, then real data
-    sources, then the WFF mirror dial.
+  - *Increment 2 DONE* — CHRON chronometer and the shared long-press system.
+    Tap start/stop repurposes the time display to accent `MM:SS` + `.hh`; the
+    helper line shows; a >550ms hold on CHRON resets to the clock; the progress
+    arc sweeps the top half. All verified on the emulator by driving `adb input`
+    and screenshotting each state (run / arc mid-sweep / reset).
+  - *Observed for Layer 4 polish:* while the chrono is engaged, the extra helper
+    line compresses the fixed-height column and squeezes the NEXT chip so its
+    `NEXT · <event>` label clips. Expected from the spec (the line must go
+    somewhere) but worth revisiting.
+  - *Next:* LIGHT, then TIMER, then real data sources, then the WFF mirror dial.
+
+### Chronometer / long-press design
+
+- Pure logic is isolated and unit-tested: `chrono/Chronometer.kt` (immutable,
+  computes elapsed against a caller-supplied monotonic `nowMs`) and
+  `chrono/ChronoFormatter.kt`. No Android types, so they run as plain JVM tests.
+- `ui/LongPressGesture.kt` is the shared 550ms system (tap vs fire-at-threshold,
+  arc after 100ms). The frame-paced progress loop runs on a
+  `rememberCoroutineScope()`, **not** the pointer gesture: a held finger emits no
+  pointer events to tick against, and `PointerInputScope` is not a
+  `CoroutineScope`. Passing the scope in is deliberate, not incidental.
+- Timing uses `SystemClock.uptimeMillis()` (monotonic), never wall-clock — the
+  clock changing must not corrupt a running stopwatch.
 
 ### Compose layout gotchas paid for already
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,11 +33,16 @@ fun UtilityButtonBar(
     palette: AvionicsPalette,
     scale: DesignScale,
     chronoActive: Boolean,
+    chronoEngaged: Boolean,
     lightActive: Boolean,
     timerActive: Boolean,
+    onChronTap: () -> Unit,
+    onChronLongPress: () -> Unit,
+    onChronProgress: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
 
     Row(
@@ -51,7 +57,16 @@ fun UtilityButtonBar(
             // CSS order: top-left, top-right, bottom-right, bottom-left.
             shape = RoundedCornerShape(d(0f), d(0f), d(10f), d(90f)),
             labelInsetStart = d(23f),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .longPressGesture(
+                    // The reset hold only means something once the chrono runs.
+                    longPressEnabled = chronoEngaged,
+                    scope = scope,
+                    onTap = onChronTap,
+                    onLongPress = onChronLongPress,
+                    onProgress = onChronProgress,
+                ),
         )
         UtilityButton(
             label = if (lightActive) "LIGHT·ON" else "LIGHT",
