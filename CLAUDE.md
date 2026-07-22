@@ -50,9 +50,20 @@ The dial is what you see on your wrist; tapping it launches the app for anything
 that needs real logic. This is the only shape where every archived feature
 survives on hardware you can actually buy today.
 
-`:app` currently still contains the AndroidX *watch face* (`NerdWatchFaceService`).
-That was Layer 1 and it only runs on Wear OS 4. It should be converted into a
-regular Wear OS app + tile, not deleted — the renderer logic is reusable.
+The AndroidX watch face that `:app` held in Layer 1 has been **removed** — it ran
+only on Wear OS 4, which the target Galaxy Watch 6 is well past. `:app` is now a
+Compose for Wear OS app.
+
+### The design: Avionics Mk II
+
+`initialDesignPrompt.md` is the authoritative visual spec — aircraft-cockpit HUD,
+amber phosphor on warm black, Rajdhani numerals and Michroma stencil labels.
+
+Its entire "Behaviors" section (chronometer, 550ms long-press arc, light mode,
+timer pages) is **impossible in WFF** — no state, no gestures, no navigation. So
+the design is built as the Compose app, and the WFF dial will mirror only its
+static layout with tap zones that launch the app. Read the mapping table in the
+design discussion before assuming any element can live on the dial.
 
 ## Current state
 
@@ -61,8 +72,29 @@ regular Wear OS app + tile, not deleted — the renderer logic is reusable.
 - **Layer 2 (First Breath): DONE for the dial.** The WFF face renders the real
   current time on **Wear OS 5 and Wear OS 6**. Verified by screenshot on both,
   not just by a green build.
-- **Next:** grow the dial (date, then the first data field) — one tested
-  increment at a time.
+- **Layer 3 (Grow by Observation): in progress.**
+  - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
+    6 emulator: battery, date, hairlines, glowing time with fixed-width cells,
+    bordered seconds box, STEPS/TEMP cells, NEXT chip, conformal button bar.
+    Live clock; other values still the design's reference data.
+  - *Next:* CHRON + the long-press arc, then LIGHT, then TIMER, then real data
+    sources, then the WFF mirror dial.
+
+### Compose layout gotchas paid for already
+
+- **`Trim.Both` will not shrink a line below the font's natural metrics.**
+  Rajdhani's ascent+descent is ~1.28em, so the time row measured **150px instead
+  of 96px** and squeezed the next-event chip to *zero height*. Fixed-width glyph
+  cells therefore need an explicit `.height()` plus
+  `wrapContentHeight(unbounded = true)` on the text — setting `lineHeight` alone
+  is not enough.
+- **`Modifier.blur` defaults to a bounded blur** and paints a hard-edged
+  rectangle behind the numerals. The glow needs
+  `BlurredEdgeTreatment.Unbounded`.
+- **Only lock cell widths for digits and `:` / `.`** — letters (`T-2H 37M`, the
+  `°`) need their natural advance or they collide.
+- When a layout looks wrong, **measure it** with `Modifier.onSizeChanged` and
+  logcat. Two speculative fixes failed here; the measurement found it instantly.
 
 ## Target hardware
 
