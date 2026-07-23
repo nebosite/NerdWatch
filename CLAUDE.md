@@ -82,10 +82,13 @@ design discussion before assuming any element can live on the dial.
     helper line shows; a >550ms hold on CHRON resets to the clock; the progress
     arc sweeps the top half. All verified on the emulator by driving `adb input`
     and screenshotting each state (run / arc mid-sweep / reset).
-  - *Observed for Layer 4 polish:* while the chrono is engaged, the extra helper
-    line compresses the fixed-height column and squeezes the NEXT chip so its
-    `NEXT · <event>` label clips. Expected from the spec (the line must go
-    somewhere) but worth revisiting.
+  - *Tweaks (per user):* the `STOPWATCH · HOLD BTN TO RESET` helper line was
+    removed entirely — no extra text on the face in either mode. Removing it also
+    resolved the chip-squeeze that engaging the chrono used to cause. The seconds
+    box is now baseline-aligned to the main time: `FixedWidthNumerals` takes a
+    `cellAlignment` (bottom-anchored here) and the box is lifted by
+    `SECONDS_BASELINE_NUDGE` (7.5 design px) to close the descent gap between the
+    two font sizes. Verified by pixel-measuring both ink bottoms to delta 0.
   - *Next:* LIGHT, then TIMER, then real data sources, then the WFF mirror dial.
 
 ### Chronometer / long-press design

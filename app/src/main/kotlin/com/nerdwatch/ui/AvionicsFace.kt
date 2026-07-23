@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -96,15 +97,6 @@ fun AvionicsFace(
             Hairline(palette, scale)
 
             TimeRow(snapshot, palette, tokens, scale)
-
-            if (snapshot.chronoEngaged) {
-                StencilText(
-                    text = "STOPWATCH · HOLD BTN TO RESET",
-                    fontSizePx = scale.px(9f),
-                    color = accent,
-                    trackingPx = scale.px(3f),
-                )
-            }
 
             Hairline(palette, scale)
 
@@ -226,26 +218,36 @@ private fun TimeRow(
             weight = FontWeight.Bold,
             glowColor = if (palette.glow) Color(palette.accent) else null,
             scaleFactor = scale.factor,
+            cellAlignment = Alignment.BottomCenter,
         )
 
         Spacer(Modifier.width(d(10f)))
 
+        // A tight bordered box around the hundredths, lifted so its baseline
+        // meets the main time's. The smaller font's descent sits lower relative
+        // to a bottom-aligned row, so the box is nudged up by the measured gap
+        // (digits have no descender, so baseline = the visible bottom edge).
         Box(
             modifier = Modifier
+                .offset(y = -d(SECONDS_BASELINE_NUDGE))
                 .width(secondsBoxWidth)
                 .border(d(1f), Color(palette.line))
-                .padding(d(2f)),
-            contentAlignment = Alignment.Center,
+                .padding(horizontal = d(2f), vertical = d(2f)),
+            contentAlignment = Alignment.BottomCenter,
         ) {
             FixedWidthNumerals(
                 text = snapshot.secondsText,
                 fontSizePx = secondsFontPx,
                 color = Color(palette.accent),
                 weight = FontWeight.SemiBold,
+                cellAlignment = Alignment.BottomCenter,
             )
         }
     }
 }
+
+/** Design-px lift of the seconds box so its baseline meets the main time's. */
+private const val SECONDS_BASELINE_NUDGE = 7.5f
 
 @Composable
 private fun DataRow(

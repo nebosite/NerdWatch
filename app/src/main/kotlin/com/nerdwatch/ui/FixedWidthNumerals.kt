@@ -57,6 +57,7 @@ fun FixedWidthNumerals(
     weight: FontWeight = FontWeight.Bold,
     glowColor: Color? = null,
     scaleFactor: Float = 1f,
+    cellAlignment: Alignment = Alignment.Center,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (glowColor != null) {
@@ -67,6 +68,7 @@ fun FixedWidthNumerals(
                 fontSizePx = fontSizePx,
                 color = glowColor.copy(alpha = GLOW_WIDE_ALPHA),
                 weight = weight,
+                cellAlignment = cellAlignment,
                 modifier = Modifier.blur(
                     (GLOW_WIDE_BLUR_PX * scaleFactor).dp,
                     edgeTreatment = BlurredEdgeTreatment.Unbounded,
@@ -77,6 +79,7 @@ fun FixedWidthNumerals(
                 fontSizePx = fontSizePx,
                 color = glowColor.copy(alpha = GLOW_TIGHT_ALPHA),
                 weight = weight,
+                cellAlignment = cellAlignment,
                 modifier = Modifier.blur(
                     (GLOW_TIGHT_BLUR_PX * scaleFactor).dp,
                     edgeTreatment = BlurredEdgeTreatment.Unbounded,
@@ -84,7 +87,13 @@ fun FixedWidthNumerals(
             )
         }
 
-        NumeralRow(text = text, fontSizePx = fontSizePx, color = color, weight = weight)
+        NumeralRow(
+            text = text,
+            fontSizePx = fontSizePx,
+            color = color,
+            weight = weight,
+            cellAlignment = cellAlignment,
+        )
     }
 }
 
@@ -95,10 +104,11 @@ private fun NumeralRow(
     color: Color,
     weight: FontWeight,
     modifier: Modifier = Modifier,
+    cellAlignment: Alignment = Alignment.Center,
 ) {
     val density = LocalDensity.current
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier, verticalAlignment = Alignment.Bottom) {
         text.forEach { glyph ->
             // Only digits and the separators they slide past need locked cells.
             // Letters (the T-2H 37M countdown, the ° on temperature) keep their
@@ -119,7 +129,7 @@ private fun NumeralRow(
 
             Box(
                 modifier = cellModifier,
-                contentAlignment = Alignment.Center,
+                contentAlignment = cellAlignment,
             ) {
                 Text(
                     text = glyph.toString(),
