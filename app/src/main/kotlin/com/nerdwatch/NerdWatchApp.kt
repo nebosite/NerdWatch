@@ -1,9 +1,12 @@
 package com.nerdwatch
 
+import android.Manifest
 import android.content.Context
 import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -19,6 +22,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import com.nerdwatch.chrono.ChronoFormatter
 import com.nerdwatch.chrono.Chronometer
+import com.nerdwatch.data.SubAppLauncher
+import com.nerdwatch.data.rememberBatteryPercent
+import com.nerdwatch.data.rememberStepCount
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.AvionicsTokens
 import com.nerdwatch.design.DesignScale
@@ -61,6 +67,18 @@ fun NerdWatchApp() {
 
     val context = LocalContext.current
 
+    // Ask once for step access; the sensor stays silent (and steps fall back to
+    // a placeholder) if it is denied or, as on the emulator, simply absent.
+    val stepPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* granted-or-not both fine; the reader handles absence gracefully */ }
+    LaunchedEffect(Unit) {
+        stepPermission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+    }
+
+    val batteryPercent = rememberBatteryPercent()
+    val stepCount = rememberStepCount()
+
     // Fast ticks while either the chrono or a timer is live; idle otherwise.
     val needsFastTick = chrono.isRunning || timer.isRunning(monotonicNow)
     LaunchedEffect(needsFastTick) {
@@ -90,19 +108,27 @@ fun NerdWatchApp() {
     val dateText = wallNow.format(DATE_FORMAT).uppercase(Locale.US)
     val timerRunning = timer.isRunning(monotonicNow)
 
+    // Real battery always; real steps when the sensor is present, else the
+    // placeholder. Temp stays the design's stub, and the next event is still a
+    // placeholder until the watch can sync a calendar.
+    val stepsText = stepCount?.let { String.format(Locale.US, "%,d", it) } ?: FaceSnapshot.PREVIEW.steps
+    val base = FaceSnapshot.PREVIEW.copy(
+        batteryPercent = batteryPercent,
+        steps = stepsText,
+        dateText = dateText,
+    )
+
     val snapshot = if (chrono.isEngaged) {
         val parts = ChronoFormatter.format(chrono.elapsedMs(monotonicNow))
-        FaceSnapshot.PREVIEW.copy(
+        base.copy(
             timeText = parts.big,
             secondsText = parts.hundredths,
-            dateText = dateText,
             chronoEngaged = true,
         )
     } else {
-        FaceSnapshot.PREVIEW.copy(
+        base.copy(
             timeText = wallNow.format(TIME_FORMAT),
             secondsText = ":" + wallNow.format(SECONDS_FORMAT),
-            dateText = dateText,
             chronoEngaged = false,
         )
     }
@@ -126,6 +152,10 @@ fun NerdWatchApp() {
                 },
                 timerActive = timerRunning,
                 timerRemaining = if (timerRunning) TimerFormatter.compact(timer.remainingMs(monotonicNow)) else null,
+                onBatteryTap = { SubAppLauncher.openBattery(context) },
+                onStepsTap = { SubAppLauncher.openSteps(context) },
+                onTempTap = { SubAppLauncher.openWeather(context) },
+                onNextTap = { SubAppLauncher.openCalendar(context) },
             )
 
             Screen.TIMER_PRESET -> TimerPresetScreen(

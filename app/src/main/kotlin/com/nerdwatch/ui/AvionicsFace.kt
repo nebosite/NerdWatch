@@ -48,6 +48,10 @@ fun AvionicsFace(
     onTimerTap: () -> Unit = {},
     timerActive: Boolean = false,
     timerRemaining: String? = null,
+    onBatteryTap: () -> Unit = {},
+    onStepsTap: () -> Unit = {},
+    onTempTap: () -> Unit = {},
+    onNextTap: () -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -81,7 +85,10 @@ fun AvionicsFace(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(d(10f), Alignment.CenterVertically),
         ) {
-            BatteryReadout(snapshot.batteryPercent, batteryColor, accent, scale, tokens)
+            BatteryReadout(
+                snapshot.batteryPercent, batteryColor, accent, scale, tokens,
+                modifier = Modifier.tapGesture(onBatteryTap),
+            )
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 StencilText(
@@ -99,9 +106,9 @@ fun AvionicsFace(
 
             Hairline(palette, scale)
 
-            DataRow(snapshot, palette, tokens, scale)
+            DataRow(snapshot, palette, tokens, scale, onStepsTap, onTempTap)
 
-            NextEventChip(snapshot, palette, scale)
+            NextEventChip(snapshot, palette, scale, Modifier.tapGesture(onNextTap))
         }
 
         UtilityButtonBar(
@@ -142,11 +149,12 @@ private fun BatteryReadout(
     accent: Color,
     scale: DesignScale,
     tokens: AvionicsTokens,
+    modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         AccentBar(accent, scale)
         Spacer(Modifier.width(d(10f)))
         StencilText(
@@ -233,13 +241,21 @@ private fun DataRow(
     palette: AvionicsPalette,
     tokens: AvionicsTokens,
     scale: DesignScale,
+    onStepsTap: () -> Unit,
+    onTempTap: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(tokens.dataAreaWidthPct / 100f),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        DataCell("STEPS", snapshot.steps, palette, tokens, scale, borderOnStart = true)
-        DataCell("TEMP", snapshot.temperature, palette, tokens, scale, borderOnStart = false)
+        DataCell(
+            "STEPS", snapshot.steps, palette, tokens, scale, borderOnStart = true,
+            modifier = Modifier.tapGesture(onStepsTap),
+        )
+        DataCell(
+            "TEMP", snapshot.temperature, palette, tokens, scale, borderOnStart = false,
+            modifier = Modifier.tapGesture(onTempTap),
+        )
     }
 }
 
@@ -251,6 +267,7 @@ private fun DataCell(
     tokens: AvionicsTokens,
     scale: DesignScale,
     borderOnStart: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
@@ -264,7 +281,7 @@ private fun DataCell(
         )
     }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         if (borderOnStart) accentBar()
         Spacer(Modifier.width(d(10f)))
 
@@ -296,12 +313,13 @@ private fun NextEventChip(
     snapshot: FaceSnapshot,
     palette: AvionicsPalette,
     scale: DesignScale,
+    modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .border(d(1f), Color(palette.line))
             .background(Color(palette.chip))

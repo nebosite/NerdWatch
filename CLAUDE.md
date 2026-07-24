@@ -104,7 +104,25 @@ design discussion before assuming any element can live on the dial.
     one-shot vibration, tap dismisses to the face. All paths walked on the
     emulator. Pure logic in `timer/CountdownTimer.kt` + `timer/TimerFormatter.kt`
     (10 tests). Timing is monotonic `uptimeMillis`, like the chrono.
-  - *Next:* real data sources, battery vignette, WFF mirror dial.
+  - *Increment 5 DONE (partial by design)* — real data + sub-app launches.
+    Battery is live from `BatteryManager` (verified: `adb ... battery set level 42`
+    showed 42% on the face). Tapping battery / steps / temp / next opens the
+    corresponding app via `SubAppLauncher` (verified: battery → Wear settings).
+    Steps read the hardware step counter with a graceful fallback — **the
+    emulator has no such sensor, so steps still show the placeholder and can only
+    be validated on the watch.** Temp stays the design's `78°` stub (spec allows
+    it). Calendar *data* is deferred until a paired account exists; only its tap
+    (open calendar) is wired. Taps use a footprint-free `tapGesture`, so the face
+    layout is unchanged; the spec's ≥44px touch targets are not enforced where
+    that would enlarge an element (the no-layout-shift rule wins).
+  - *Next:* battery <20% vignette, WFF mirror dial.
+
+### Deferred until the Galaxy Watch 6 arrives (~2026-07-28)
+
+Two data sources cannot be meaningfully verified on the emulator and are
+best-effort with fallbacks until then: **steps** (needs a real step counter /
+Health Services daily aggregation) and **the next calendar event** (needs a
+synced calendar account). Don't mark either "done" from an emulator screenshot.
 
 ### Hard constraint (user, 2026-07-23)
 
