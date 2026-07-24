@@ -95,8 +95,16 @@ design discussion before assuming any element can live on the dial.
     showing `fl=KEEP_SCREEN_ON` appear and disappear). Per the user's "don't
     change the physical layout" rule, the spec's `ALWAYS-ON · NO SLEEP` top label
     is **deliberately omitted** — it would add structure to the face.
-  - *Next:* TIMER (separate screens), real data sources, battery vignette, WFF
-    mirror dial.
+  - *Increment 4 DONE* — TIMER, on its own screens so the face never moves.
+    Preset grid (1..60) → running screen (big glowing M:SS, ±5/±1 adjusters
+    clamped to ≥1s, HOLD-time-to-cancel via the shared arc, ‹FACE that leaves it
+    running). The main-face TIMER button pulses and shows `H:MM:SS` remaining in
+    the empty space *under* its label (a Column keeps the label pinned, so no
+    shift). At zero: full-face accent flash (`TIME UP` / `TAP TO DISMISS`) with a
+    one-shot vibration, tap dismisses to the face. All paths walked on the
+    emulator. Pure logic in `timer/CountdownTimer.kt` + `timer/TimerFormatter.kt`
+    (10 tests). Timing is monotonic `uptimeMillis`, like the chrono.
+  - *Next:* real data sources, battery vignette, WFF mirror dial.
 
 ### Hard constraint (user, 2026-07-23)
 

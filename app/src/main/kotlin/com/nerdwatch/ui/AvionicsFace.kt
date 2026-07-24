@@ -1,6 +1,5 @@
 package com.nerdwatch.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +46,8 @@ fun AvionicsFace(
     onChronProgress: (Float) -> Unit = {},
     onLightTap: () -> Unit = {},
     onTimerTap: () -> Unit = {},
+    timerActive: Boolean = false,
+    timerRemaining: String? = null,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -113,7 +110,8 @@ fun AvionicsFace(
             chronoActive = snapshot.chronoEngaged,
             chronoEngaged = snapshot.chronoEngaged,
             lightActive = !palette.glow,
-            timerActive = false,
+            timerActive = timerActive,
+            timerRemaining = timerRemaining,
             onChronTap = onChronTap,
             onChronLongPress = onChronLongPress,
             onChronProgress = onChronProgress,
@@ -122,31 +120,7 @@ fun AvionicsFace(
             modifier = Modifier.align(Alignment.BottomCenter),
         )
 
-        if (pressProgress > 0f) {
-            LongPressArc(color = accent, progress = pressProgress, scale = scale)
-        }
-    }
-}
-
-/**
- * The long-press progress arc. Accent stroke sweeping the top half of the face,
- * from 9 o'clock clockwise across 12 to 3 o'clock — Compose measures angles
- * clockwise from 3 o'clock, so 180° start + a 180° sweep traces exactly that.
- */
-@Composable
-private fun LongPressArc(color: Color, progress: Float, scale: DesignScale) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val stroke = scale.px(6f)
-        val inset = scale.px(3f) + stroke / 2f
-        drawArc(
-            color = color,
-            startAngle = 180f,
-            sweepAngle = 180f * progress.coerceIn(0f, 1f),
-            useCenter = false,
-            topLeft = Offset(inset, inset),
-            size = Size(size.width - inset * 2f, size.height - inset * 2f),
-            style = Stroke(width = stroke, cap = StrokeCap.Round),
-        )
+        LongPressArcOverlay(color = accent, progress = pressProgress, scale = scale)
     }
 }
 
