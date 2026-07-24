@@ -1,21 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The always-on NerdWatch dial: a static mirror of the Avionics face's top half
+  (battery, date, big time, steps) in the same amber-on-warm-black palette.
+  Tapping the time launches the full Kotlin app, which carries every interactive
+  feature WFF cannot express. Data tags were verified one by one on the emulator
+  (see the probe history) because WFF resolves unknown tags to blank silently.
+-->
 <WatchFace width="450" height="450" clipShape="CIRCLE">
 
     <Metadata key="CLOCK_TYPE" value="DIGITAL" />
     <Metadata key="PREVIEW_TIME" value="10:08:32" />
 
-    <Scene backgroundColor="#0b0b0b">
+    <Scene backgroundColor="#0b0805">
 
-        <PartText x="0" y="175" width="450" height="110">
+        <!-- Battery percentage -->
+        <PartText x="0" y="72" width="450" height="30">
             <Text align="CENTER">
-                <Font family="SYNC_TO_DEVICE" size="96" color="#39ff6a">
-                    <!--
-                      The ":" must live in the template literal, not the expression.
-                      WFF expressions use ":" as the ternary operator, so
-                      "[HOUR_0_23]:[MINUTE_Z]" parses as a broken conditional and
-                      renders the literal text "false".
-                    -->
+                <Font family="SYNC_TO_DEVICE" size="20" color="#8a7550">
+                    <Template>%s%%<Parameter expression="[BATTERY_PERCENT]" /></Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <!-- Date: DOW · MON DD -->
+        <PartText x="0" y="104" width="450" height="32">
+            <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="22" color="#ffe9c4">
+                    <Template>%s · %s %s<Parameter expression="[DAY_OF_WEEK_S]" /><Parameter expression="[MONTH_S]" /><Parameter expression="[DAY]" /></Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <!-- Big time; tapping it opens the full NerdWatch app -->
+        <PartText x="0" y="158" width="450" height="130">
+            <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="104" color="#ffe9c4">
                     <Template>%s:%s<Parameter expression="[HOUR_0_23]" /><Parameter expression="[MINUTE_Z]" /></Template>
+                </Font>
+            </Text>
+            <Launch target="com.nerdwatch/com.nerdwatch.MainActivity" />
+        </PartText>
+
+        <!-- Steps -->
+        <PartText x="0" y="306" width="450" height="40">
+            <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="26" color="#ffb000">
+                    <Template>%s STEPS<Parameter expression="[STEP_COUNT]" /></Template>
                 </Font>
             </Text>
         </PartText>

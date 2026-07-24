@@ -72,6 +72,22 @@ design discussion before assuming any element can live on the dial.
 - **Layer 2 (First Breath): DONE for the dial.** The WFF face renders the real
   current time on **Wear OS 5 and Wear OS 6**. Verified by screenshot on both,
   not just by a green build.
+- **Phase B (WFF mirror dial): first pass DONE.** The always-on `:watchface`
+  dial now mirrors the Avionics face's top half — battery, `DOW · MON DD` date,
+  big time, and steps — in the amber-on-warm-black palette, and a `Launch`
+  element on the time opens the full Kotlin app (verified: tapping the dial's
+  time brought `com.nerdwatch/.MainActivity` to the foreground). That closes the
+  hybrid loop the architecture was built around.
+  - *WFF data tags, verified by on-emulator probe* (unknown tags render blank
+    silently, so each was checked): `[BATTERY_PERCENT]`, `[STEP_COUNT]`,
+    `[DAY_OF_WEEK_S]` (→"Thu"), `[MONTH_S]` (→"Jul"), `[DAY]` (→"23"). Dead ends
+    that rendered blank: `[DAY_1_31]`, `[DAY_0_31]`, `[DAY_OF_MONTH]`.
+  - Literal `%` in a `Template` needs `%%`. Seeing the dial requires leaving the
+    app (`KEYCODE_BACK`) so the watch face shows, not the running activity.
+  - *Follow-ups for the real watch:* bundle the Rajdhani font into the dial
+    (currently `SYNC_TO_DEVICE`), add TEMP + next-event (needs a complication or
+    weather source), and consider an ambient-mode variant.
+
 - **Layer 3 (Grow by Observation): in progress.**
   - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
     6 emulator: battery, date, hairlines, glowing time with fixed-width cells,
