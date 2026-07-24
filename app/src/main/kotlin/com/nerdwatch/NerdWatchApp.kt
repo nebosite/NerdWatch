@@ -47,7 +47,8 @@ import java.util.Locale
  * timer screens. The main face's layout never changes — the timer lives on its
  * own screens, and only color / overlay state is fed back to the face.
  */
-private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
+private val TIME_FORMAT_24: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
+private val TIME_FORMAT_12: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm", Locale.US)
 private val SECONDS_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("ss", Locale.US)
 private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE · MMM d", Locale.US)
 
@@ -64,6 +65,7 @@ fun NerdWatchApp() {
     var timeUp by remember { mutableStateOf(false) }
     var pressProgress by remember { mutableFloatStateOf(0f) }
     var lightOn by remember { mutableStateOf(false) }
+    var use24Hour by remember { mutableStateOf(false) }
     var monotonicNow by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     var wallNow by remember { mutableStateOf(LocalDateTime.now()) }
 
@@ -130,7 +132,7 @@ fun NerdWatchApp() {
         )
     } else {
         base.copy(
-            timeText = wallNow.format(TIME_FORMAT),
+            timeText = wallNow.format(if (use24Hour) TIME_FORMAT_24 else TIME_FORMAT_12),
             secondsText = ":" + wallNow.format(SECONDS_FORMAT),
             chronoEngaged = false,
         )
@@ -160,6 +162,8 @@ fun NerdWatchApp() {
                 onTempTap = { SubAppLauncher.openWeather(context) },
                 onNextTap = { SubAppLauncher.openCalendar(context) },
                 solar = solar,
+                onTimeLongPress = { use24Hour = !use24Hour },
+                onTimeProgress = { pressProgress = it },
             )
 
             Screen.TIMER_PRESET -> TimerPresetScreen(

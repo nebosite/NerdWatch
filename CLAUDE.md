@@ -166,6 +166,16 @@ best-effort with fallbacks until then: **steps** (needs a real step counter /
 Health Services daily aggregation) and **the next calendar event** (needs a
 synced calendar account). Don't mark either "done" from an emulator screenshot.
 
+### Clock format (user, 2026-07-24)
+
+The face defaults to **12-hour** (`h:mm`, no leading zero). A **long-press on the
+time** toggles between 12- and 24-hour, using the shared long-press arc and
+disabled while the chrono owns the display. State is in-memory (`use24Hour`),
+so it resets on relaunch — persistence is a possible follow-up. The WFF dial is
+unaffected (still `[HOUR_0_23]`); switching it to `[HOUR_1_12]` for consistency
+is a separate change. Verified by noticing the app read "12:15" while the device
+clock was 00:15, then long-pressing to get "00:16".
+
 ### Hard constraint (user, 2026-07-23)
 
 **Never change the physical layout of the main face.** Colors, glow, active

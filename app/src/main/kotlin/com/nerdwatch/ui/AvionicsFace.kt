@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -54,6 +55,8 @@ fun AvionicsFace(
     onTempTap: () -> Unit = {},
     onNextTap: () -> Unit = {},
     solar: SolarData = SolarData.UNKNOWN,
+    onTimeLongPress: () -> Unit = {},
+    onTimeProgress: (Float) -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -104,7 +107,14 @@ fun AvionicsFace(
 
             Hairline(palette, scale)
 
-            TimeRow(snapshot, palette, tokens, scale)
+            TimeRow(
+                snapshot, palette, tokens, scale,
+                // Long-pressing the clock toggles 12/24h; disabled while the
+                // chrono owns the display (its reset is on the CHRON button).
+                longPressEnabled = !snapshot.chronoEngaged,
+                onLongPress = onTimeLongPress,
+                onProgress = onTimeProgress,
+            )
 
             Hairline(palette, scale)
 
@@ -187,8 +197,12 @@ private fun TimeRow(
     palette: AvionicsPalette,
     tokens: AvionicsTokens,
     scale: DesignScale,
+    longPressEnabled: Boolean,
+    onLongPress: () -> Unit,
+    onProgress: (Float) -> Unit,
 ) {
     val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
 
     val secondsFontPx = scale.px(tokens.timeFontPx * 0.3f)
@@ -198,7 +212,16 @@ private fun TimeRow(
     // While the chrono runs the numerals switch from fg to accent.
     val digitColor = if (snapshot.chronoEngaged) Color(palette.accent) else Color(palette.timeDigits)
 
-    Row(verticalAlignment = Alignment.Bottom) {
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        modifier = Modifier.longPressGesture(
+            longPressEnabled = longPressEnabled,
+            scope = scope,
+            onTap = {},
+            onLongPress = onLongPress,
+            onProgress = onProgress,
+        ),
+    ) {
         FixedWidthNumerals(
             text = snapshot.timeText,
             fontSizePx = scale.px(tokens.timeFontPx),
