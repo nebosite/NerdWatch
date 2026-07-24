@@ -82,9 +82,12 @@ fun AvionicsFace(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Narrower side padding widens the full-width data row and
+                // appointment so they reach closer to the display edge; the
+                // centered battery/date/time are unaffected.
                 .padding(
-                    start = d(46f),
-                    end = d(46f),
+                    start = d(34f),
+                    end = d(34f),
                     top = d(46f),
                     bottom = d(108f),
                 )
@@ -365,7 +368,10 @@ private fun NextEventChip(
             .fillMaxWidth()
             .border(d(1f), Color(palette.line))
             .background(Color(palette.chip))
-            .padding(horizontal = d(12f), vertical = d(7f)),
+            // Taller than the 7px content padding so the gap to the buttons below
+            // halves (a centered column moves the chip's bottom down by ~half the
+            // added height).
+            .padding(horizontal = d(12f), vertical = d(17f)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {

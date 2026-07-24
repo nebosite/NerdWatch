@@ -9,11 +9,12 @@ import kotlin.math.sqrt
 /**
  * Where the moon sits in the sky, mapped onto the widget's ring.
  *
- * The ring is the full 360° diurnal circle of the moon's hour angle: the moon at
- * upper transit (highest, "overhead") is the top of the ring, rising in the east
- * is the right, nadir ("below your feet") is the bottom, setting in the west is
- * the left. That is exactly the hour angle H measured west from the meridian,
- * with ring angle φ (clockwise from top) = −H.
+ * The ring is the full 360° diurnal circle of the moon's hour angle, drawn from
+ * the perspective of a Northern-hemisphere observer facing south: the moon at
+ * upper transit ("overhead") is the top, rising in the east is the LEFT, nadir
+ * ("below your feet") is the bottom, setting in the west is the RIGHT. Facing
+ * south puts east on the left, so ring angle φ (clockwise from top) = +H, the
+ * hour angle measured west from the meridian.
  *
  * Lunar right ascension uses Schlyter's low-precision method (a degree or two —
  * fine for a marker). Latitude is not needed; only longitude, via sidereal time.
@@ -28,8 +29,11 @@ object MoonPosition {
         return ringAngleFromHourAngle(hourAngleDeg)
     }
 
-    /** Pure mapping: transit(0)→top, +6h/90°(setting)→left, −6h(rising)→right, ±12h→bottom. */
-    fun ringAngleFromHourAngle(hourAngleDeg: Double): Double = norm360(-hourAngleDeg)
+    /**
+     * Pure mapping, facing south: transit(0)→top, +6h/90° (setting/west)→right,
+     * −6h (rising/east)→left, ±12h→bottom.
+     */
+    fun ringAngleFromHourAngle(hourAngleDeg: Double): Double = norm360(hourAngleDeg)
 
     /** Geocentric apparent right ascension of the moon, degrees [0,360). */
     fun rightAscensionDeg(instant: Instant): Double {

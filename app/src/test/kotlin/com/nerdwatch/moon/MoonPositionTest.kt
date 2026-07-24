@@ -13,14 +13,14 @@ class MoonPositionTest {
     }
 
     @Test
-    fun `rising in the east maps to the right`() {
+    fun `rising in the east maps to the left (facing south)`() {
         // 6 hours before transit = hour angle -90 degrees = rising.
-        assertEquals(90.0, MoonPosition.ringAngleFromHourAngle(-90.0), 0.001)
+        assertEquals(270.0, MoonPosition.ringAngleFromHourAngle(-90.0), 0.001)
     }
 
     @Test
-    fun `setting in the west maps to the left`() {
-        assertEquals(270.0, MoonPosition.ringAngleFromHourAngle(90.0), 0.001)
+    fun `setting in the west maps to the right (facing south)`() {
+        assertEquals(90.0, MoonPosition.ringAngleFromHourAngle(90.0), 0.001)
     }
 
     @Test

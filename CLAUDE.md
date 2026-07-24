@@ -129,6 +129,14 @@ design discussion before assuming any element can live on the dial.
   - *Emulator gotcha:* the watch face only appears after leaving the app
     (`KEYCODE_BACK`); `emu geo fix` only reaches an **active** location request,
     so spam it while `getCurrentLocation` waits.
+  - *Refinements (user, 2026-07-24):* moon disk shrunk 30%; the ring marker uses
+    a **south-facing** convention (rising/east → left, setting/west → right) — the
+    `ringAngleFromHourAngle` sign flipped and its tests with it; the cloud is now
+    a night-cloud (light over the moon's shadow, dark over its lit face, silver
+    rim) via clip-and-paint using the lit-region path. The appointment chip was
+    made taller so the gap to the buttons halved (measured 22→11px), and the
+    column side padding was trimmed 46→34 so the data row and chip reach closer
+    to the display edge.
 
 - **Layer 3 (Grow by Observation): in progress.**
   - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
