@@ -140,8 +140,8 @@ fun AvionicsFace(
             scale = scale,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                // Shifted ~75px further right (per request), into the upper-right.
-                .offset(x = d(190f), y = d(87f)),
+                // Upper-right; pulled back ~40px from the far-right edge.
+                .offset(x = d(152f), y = d(87f)),
         )
 
         UtilityButtonBar(

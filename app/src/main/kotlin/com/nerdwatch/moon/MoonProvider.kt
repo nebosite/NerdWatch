@@ -36,7 +36,6 @@ import kotlin.coroutines.resume
  * cloud are simply absent.
  */
 private const val REFRESH_INTERVAL_MS = 30 * 60_000L
-private const val CLOUDY_THRESHOLD = 50.0
 
 @Composable
 fun rememberMoonData(): MoonData {
@@ -52,13 +51,13 @@ fun rememberMoonData(): MoonData {
 
             val location = currentLocation(context)
             val ringAngle = location?.let { MoonPosition.ringAngleDegrees(midnight, it.longitude) }
-            val cloudy = location?.let {
+            val cloudCount = location?.let {
                 withContext(Dispatchers.IO) {
-                    runCatching { isCloudyTonight(it.latitude, it.longitude, zone) }.getOrDefault(false)
+                    runCatching { cloudCountTonight(it.latitude, it.longitude, zone) }.getOrDefault(0)
                 }
-            } ?: false
+            } ?: 0
 
-            data = MoonData(phaseFraction = phase, ringAngleDeg = ringAngle, cloudy = cloudy)
+            data = MoonData(phaseFraction = phase, ringAngleDeg = ringAngle, cloudCount = cloudCount)
             delay(REFRESH_INTERVAL_MS)
         }
     }
@@ -107,8 +106,8 @@ private suspend fun currentLocation(context: Context): Location? {
     }
 }
 
-/** Average cloud cover across tonight's local night hours, thresholded. */
-private fun isCloudyTonight(lat: Double, lon: Double, zone: ZoneId): Boolean {
+/** Cloud count from the average cover across tonight's local night hours. */
+private fun cloudCountTonight(lat: Double, lon: Double, zone: ZoneId): Int {
     val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon" +
         "&hourly=cloud_cover&forecast_days=2&timezone=auto"
     val connection = (URL(url).openConnection() as HttpURLConnection).apply {
@@ -137,5 +136,5 @@ private fun isCloudyTonight(lat: Double, lon: Double, zone: ZoneId): Boolean {
             count++
         }
     }
-    return count > 0 && (sum / count) >= CLOUDY_THRESHOLD
+    return if (count == 0) 0 else MoonData.cloudCountForCover(sum / count)
 }

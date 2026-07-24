@@ -32,10 +32,10 @@ import kotlin.math.sin
  * The moon widget: the moon in its current phase, hugged by a light sky ring
  * whose diamond marker shows where the moon will be in the sky at local midnight
  * (facing south: top = overhead, left = rising/east, bottom = underfoot,
- * right = setting/west). When tonight is ≥50% cloudy a romantic cloud — twice
- * the moon's diameter, widest at its base and tapering to points at each side —
- * drifts across: light over the moon's shadow, dark amber (the buttons' fill)
- * over its lit face, with a silver-lined edge.
+ * right = setting/west). One drifting cloud is drawn when tonight's forecast
+ * cover is over 30%, a second (down and to the right) when it is over 60%: light
+ * over the moon's shadow, dark amber (the buttons' fill) over its lit face, with
+ * a silver-lined edge, from the supplied cloud images.
  *
  * Drawn on a fixed-size Canvas and positioned absolutely by the caller, so it
  * never moves when the clock switches between 12- and 24-hour format.
@@ -62,7 +62,9 @@ fun MoonWidget(
 
         drawMoonDisk(center, moonRadius, litPath, palette)
         drawRing(center, ringRadius, palette, scale)
-        if (moon.cloudy) drawNightCloud(center, moonRadius, litPath, palette, cloudImage, cloudHighlight)
+        if (moon.cloudCount >= 1) {
+            drawNightCloud(center, moonRadius, litPath, palette, cloudImage, cloudHighlight, moon.cloudCount)
+        }
         moon.ringAngleDeg?.let { drawMarker(center, ringRadius, it, palette, scale) }
     }
 }
@@ -149,32 +151,39 @@ private fun DrawScope.drawNightCloud(
     palette: AvionicsPalette,
     cloud: ImageBitmap,
     highlight: ImageBitmap,
+    count: Int,
 ) {
     val light = Color(0xFFC2CAD6)                        // soft light cloud
     val darkAmber = Color(buttonFill(palette))          // matches the buttons' background
     val silver = Color(0xFFDCE2EC)
 
-    // 50% wider than the moon (1.5 × diameter); height keeps the image aspect.
-    val cloudWidth = moonRadius * 3f
-    val cloudHeight = cloudWidth * cloud.height / cloud.width
-    val left = center.x - cloudWidth / 2f
-    val top = center.y - cloudHeight / 2f
+    // Base cloud = 1.5× the moon width, then stretched 50% wider and 2× taller.
+    val cloudWidth = moonRadius * 3f * 1.5f
+    val cloudHeight = (moonRadius * 3f * cloud.height / cloud.width) * 2f
+    // Grow the extra height downward: keep the original top edge.
+    val topY = center.y - (moonRadius * 3f * cloud.height / cloud.width) / 2f
 
-    fun paint(image: ImageBitmap, color: Color, alpha: Float) {
-        drawImage(
-            image = image,
-            srcOffset = IntOffset.Zero,
-            srcSize = IntSize(image.width, image.height),
-            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
-            dstSize = IntSize(cloudWidth.roundToInt(), cloudHeight.roundToInt()),
-            alpha = alpha,
-            colorFilter = ColorFilter.tint(color),
-        )
+    fun drawCloudAt(cloudCenterX: Float, cloudTop: Float) {
+        val left = cloudCenterX - cloudWidth / 2f
+        fun paint(image: ImageBitmap, color: Color, alpha: Float) {
+            drawImage(
+                image = image,
+                srcOffset = IntOffset.Zero,
+                srcSize = IntSize(image.width, image.height),
+                dstOffset = IntOffset(left.roundToInt(), cloudTop.roundToInt()),
+                dstSize = IntSize(cloudWidth.roundToInt(), cloudHeight.roundToInt()),
+                alpha = alpha,
+                colorFilter = ColorFilter.tint(color),
+            )
+        }
+        paint(cloud, light, 0.85f)                           // light over sky + shadow
+        clipPath(litPath) { paint(cloud, darkAmber, 0.95f) } // dark amber over the lit face
+        paint(highlight, silver, 0.9f)                       // silver highlights on top
     }
 
-    paint(cloud, light, 0.85f)                           // light over sky + shadow
-    clipPath(litPath) { paint(cloud, darkAmber, 0.95f) } // dark amber over the lit face
-    paint(highlight, silver, 0.9f)                       // silver highlights on top
+    drawCloudAt(center.x, topY)
+    // A second copy, a little down and to the right, only when it is cloudier.
+    if (count >= 2) drawCloudAt(center.x + moonRadius * 0.6f, topY + moonRadius * 0.6f)
 }
 
 /** The buttons' apparent fill: their chip color composited over the face background. */
