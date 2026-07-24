@@ -28,6 +28,7 @@ import com.nerdwatch.data.rememberStepCount
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.AvionicsTokens
 import com.nerdwatch.design.DesignScale
+import com.nerdwatch.moon.rememberMoonData
 import com.nerdwatch.solar.rememberSolarData
 import com.nerdwatch.timer.CountdownTimer
 import com.nerdwatch.timer.TimerFormatter
@@ -71,18 +72,25 @@ fun NerdWatchApp() {
 
     val context = LocalContext.current
 
-    // Ask once for step access; the sensor stays silent (and steps fall back to
-    // a placeholder) if it is denied or, as on the emulator, simply absent.
-    val stepPermission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { /* granted-or-not both fine; the reader handles absence gracefully */ }
+    // Ask once for step + location access; both readers degrade gracefully if
+    // denied or, as on the emulator, simply unavailable.
+    val permissions = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { /* granted-or-not both fine */ }
     LaunchedEffect(Unit) {
-        stepPermission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        permissions.launch(
+            arrayOf(
+                Manifest.permission.ACTIVITY_RECOGNITION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ),
+        )
     }
 
     val batteryPercent = rememberBatteryPercent()
     val stepCount = rememberStepCount()
     val solar = rememberSolarData()
+    val moon = rememberMoonData()
 
     // Fast ticks while either the chrono or a timer is live; idle otherwise.
     val needsFastTick = chrono.isRunning || timer.isRunning(monotonicNow)
@@ -164,6 +172,7 @@ fun NerdWatchApp() {
                 solar = solar,
                 onTimeLongPress = { use24Hour = !use24Hour },
                 onTimeProgress = { pressProgress = it },
+                moon = moon,
             )
 
             Screen.TIMER_PRESET -> TimerPresetScreen(

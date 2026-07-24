@@ -105,6 +105,31 @@ design discussion before assuming any element can live on the dial.
     SOLAR to the WFF dial (WFF has no NOAA source — would need a complication or a
     data-provider service).
 
+- **Moon widget (user request, 2026-07-24).** Upper-right of the face, right of
+  the centered battery/date and above the seconds box: the moon in its current
+  phase (rendered, no text), inside a light ring whose amber diamond marks where
+  the moon will be in the sky at tonight's local midnight (top = overhead,
+  right = rising/east, bottom = underfoot, left = setting/west). A translucent
+  cloud lays over the disk when tonight is forecast ≥50% cloudy. The date/time
+  hairline was removed as part of this. The widget is anchored absolutely, so
+  the 12/24h toggle (which changes the time's width) never moves it — verified.
+  - Pure + tested (`moon/`): `MoonPhase` (synodic approximation, checked against
+    known new/full/quarter dates) and `MoonPosition` (Schlyter lunar RA + GMST →
+    hour angle → ring angle; the transit=top/rise=right/etc. mapping is unit-
+    tested). Phase drawing verified by forcing waxing/waning crescents and gibbous
+    on the emulator; the mirror handles the waning half.
+  - Location via `LocationManager.getCurrentLocation` (last-known is null on a
+    cold start / the emulator, so a one-shot request is needed). Needs COARSE or
+    FINE; FINE is declared too so the emulator's GPS `geo fix` is readable. Cloud
+    is Open-Meteo hourly `cloud_cover` averaged over tonight's night hours.
+  - Without location the marker and cloud are simply absent; the phase always
+    shows (date-only). Verified live by mock-locating the emulator to Seattle:
+    marker appeared at the computed angle and the cloud showed (Seattle was
+    ≥50% cloudy).
+  - *Emulator gotcha:* the watch face only appears after leaving the app
+    (`KEYCODE_BACK`); `emu geo fix` only reaches an **active** location request,
+    so spam it while `getCurrentLocation` waits.
+
 - **Layer 3 (Grow by Observation): in progress.**
   - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
     6 emulator: battery, date, hairlines, glowing time with fixed-width cells,

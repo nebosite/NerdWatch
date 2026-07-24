@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.AvionicsTokens
 import com.nerdwatch.design.DesignScale
+import com.nerdwatch.moon.MoonData
 import com.nerdwatch.solar.SolarData
 
 /**
@@ -57,6 +58,7 @@ fun AvionicsFace(
     solar: SolarData = SolarData.UNKNOWN,
     onTimeLongPress: () -> Unit = {},
     onTimeProgress: (Float) -> Unit = {},
+    moon: MoonData = MoonData.UNKNOWN,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -105,8 +107,6 @@ fun AvionicsFace(
                 Spacer(Modifier.height(d(tokens.metaMarginBottomPx)))
             }
 
-            Hairline(palette, scale)
-
             TimeRow(
                 snapshot, palette, tokens, scale,
                 // Long-pressing the clock toggles 12/24h; disabled while the
@@ -122,6 +122,18 @@ fun AvionicsFace(
 
             NextEventChip(snapshot, palette, scale, Modifier.tapGesture(onNextTap))
         }
+
+        // Anchored to the face (not the time row), so switching 12/24h — which
+        // changes the time's width — never nudges the moon. Sits right of the
+        // centered battery/date and above the seconds box.
+        MoonWidget(
+            moon = moon,
+            palette = palette,
+            scale = scale,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(x = d(120f), y = d(92f)),
+        )
 
         UtilityButtonBar(
             palette = palette,
