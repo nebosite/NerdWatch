@@ -88,6 +88,23 @@ design discussion before assuming any element can live on the dial.
     (currently `SYNC_TO_DEVICE`), add TEMP + next-event (needs a complication or
     weather source), and consider an ambient-mode variant.
 
+- **SOLAR widget (user request, 2026-07-24).** A solar-storm predictor sits
+  between STEPS and TEMP: a "SOLAR" label over two Kp chips — current now, and
+  the peak forecast for tonight's local night hours — each with a background that
+  fades evenly by Kp (transparent→green→yellow→orange→red→magenta). Data is live
+  from NOAA SWPC's planetary-K forecast product (one series carries observed +
+  predicted 3-hourly Kp). This is the one deliberate change to the face layout,
+  authorized by the user for this widget; the column gap was tightened 10→7 so
+  the taller two-chip cell doesn't collide with the next-event chip.
+  - Pure + unit-tested: `solar/SolarPalette.kt` (exact ARGB interpolation) and
+    `solar/SolarKpMath.kt` (current + night-max, time/zone injected). Parsing uses
+    `org.json` (not JVM-testable) so it's verified against the live feed instead.
+  - Verified on the emulator: live fetch showed current/forecast; forcing Kp
+    6.0/8.5 confirmed the yellow-orange and red-magenta blends.
+  - *Follow-ups:* a tap-through to a solar detail screen in the app, and adding
+    SOLAR to the WFF dial (WFF has no NOAA source — would need a complication or a
+    data-provider service).
+
 - **Layer 3 (Grow by Observation): in progress.**
   - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
     6 emulator: battery, date, hairlines, glowing time with fixed-width cells,

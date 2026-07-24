@@ -28,6 +28,7 @@ import com.nerdwatch.data.rememberStepCount
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.AvionicsTokens
 import com.nerdwatch.design.DesignScale
+import com.nerdwatch.solar.rememberSolarData
 import com.nerdwatch.timer.CountdownTimer
 import com.nerdwatch.timer.TimerFormatter
 import com.nerdwatch.ui.AvionicsFace
@@ -79,6 +80,7 @@ fun NerdWatchApp() {
 
     val batteryPercent = rememberBatteryPercent()
     val stepCount = rememberStepCount()
+    val solar = rememberSolarData()
 
     // Fast ticks while either the chrono or a timer is live; idle otherwise.
     val needsFastTick = chrono.isRunning || timer.isRunning(monotonicNow)
@@ -157,6 +159,7 @@ fun NerdWatchApp() {
                 onStepsTap = { SubAppLauncher.openSteps(context) },
                 onTempTap = { SubAppLauncher.openWeather(context) },
                 onNextTap = { SubAppLauncher.openCalendar(context) },
+                solar = solar,
             )
 
             Screen.TIMER_PRESET -> TimerPresetScreen(

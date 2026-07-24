@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.AvionicsTokens
 import com.nerdwatch.design.DesignScale
+import com.nerdwatch.solar.SolarData
 
 /**
  * The Avionics Mk II face at rest.
@@ -52,6 +53,7 @@ fun AvionicsFace(
     onStepsTap: () -> Unit = {},
     onTempTap: () -> Unit = {},
     onNextTap: () -> Unit = {},
+    solar: SolarData = SolarData.UNKNOWN,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -106,7 +108,7 @@ fun AvionicsFace(
 
             Hairline(palette, scale)
 
-            DataRow(snapshot, palette, tokens, scale, onStepsTap, onTempTap)
+            DataRow(snapshot, palette, tokens, scale, solar, onStepsTap, onTempTap)
 
             NextEventChip(snapshot, palette, scale, Modifier.tapGesture(onNextTap))
         }
@@ -241,17 +243,22 @@ private fun DataRow(
     palette: AvionicsPalette,
     tokens: AvionicsTokens,
     scale: DesignScale,
+    solar: SolarData,
     onStepsTap: () -> Unit,
     onTempTap: () -> Unit,
 ) {
+    // Top-aligned so the STEPS / SOLAR / TEMP labels line up even though the
+    // SOLAR cell is taller (it stacks two Kp chips under its label).
     Row(
         modifier = Modifier.fillMaxWidth(tokens.dataAreaWidthPct / 100f),
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top,
     ) {
         DataCell(
             "STEPS", snapshot.steps, palette, tokens, scale, borderOnStart = true,
             modifier = Modifier.tapGesture(onStepsTap),
         )
+        SolarCell(solar = solar, palette = palette, scale = scale)
         DataCell(
             "TEMP", snapshot.temperature, palette, tokens, scale, borderOnStart = false,
             modifier = Modifier.tapGesture(onTempTap),
@@ -329,14 +336,15 @@ private fun NextEventChip(
     ) {
         StencilText(
             text = "NEXT · ${snapshot.nextEventName}",
-            fontSizePx = scale.px(14f),
+            // 20% smaller than the 14/22 data fonts, per request.
+            fontSizePx = scale.px(11.2f),
             color = Color(palette.dim),
             trackingPx = scale.px(1f),
             textAlign = TextAlign.Start,
         )
         FixedWidthNumerals(
             text = snapshot.nextEventCountdown,
-            fontSizePx = scale.px(22f),
+            fontSizePx = scale.px(17.6f),
             color = Color(palette.accent),
             weight = FontWeight.Bold,
         )
