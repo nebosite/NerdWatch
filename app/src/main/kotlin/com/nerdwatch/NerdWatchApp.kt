@@ -32,6 +32,7 @@ import com.nerdwatch.timer.CountdownTimer
 import com.nerdwatch.timer.TimerFormatter
 import com.nerdwatch.ui.AvionicsFace
 import com.nerdwatch.ui.FaceSnapshot
+import com.nerdwatch.ui.LowBatteryVignette
 import com.nerdwatch.ui.TimeUpOverlay
 import com.nerdwatch.ui.TimerPresetScreen
 import com.nerdwatch.ui.TimerRunningScreen
@@ -179,6 +180,11 @@ fun NerdWatchApp() {
                 },
                 onBackToFace = { screen = Screen.FACE },
             )
+        }
+
+        // Below the time-up flash, above every screen: the low-battery warning.
+        if (snapshot.batteryIsLow) {
+            LowBatteryVignette(warnColor = palette.warn)
         }
 
         if (timeUp) {

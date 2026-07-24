@@ -115,7 +115,11 @@ design discussion before assuming any element can live on the dial.
     (open calendar) is wired. Taps use a footprint-free `tapGesture`, so the face
     layout is unchanged; the spec's ≥44px touch targets are not enforced where
     that would enlarge an element (the no-layout-shift rule wins).
-  - *Next:* battery <20% vignette, WFF mirror dial.
+  - *Increment 6 DONE* — low-battery warning. Below 20% a red glow hugs the
+    circle's edge and pulses 0.35↔0.95 over every screen, and the battery readout
+    turns `warn`. The vignette is a `Canvas` with no pointer modifier, so it never
+    intercepts touches. Verified via `adb ... battery set level 15`.
+  - *Next:* the WFF mirror dial (Phase B).
 
 ### Deferred until the Galaxy Watch 6 arrives (~2026-07-28)
 
