@@ -39,6 +39,8 @@ fun UtilityButtonBar(
     onChronTap: () -> Unit,
     onChronLongPress: () -> Unit,
     onChronProgress: (Float) -> Unit,
+    onLightTap: () -> Unit,
+    onTimerTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -74,7 +76,15 @@ fun UtilityButtonBar(
             palette = palette,
             scale = scale,
             shape = RoundedCornerShape(d(0f), d(0f), d(14f), d(14f)),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .longPressGesture(
+                    longPressEnabled = false,
+                    scope = scope,
+                    onTap = onLightTap,
+                    onLongPress = {},
+                    onProgress = {},
+                ),
         )
         UtilityButton(
             label = "TIMER",
@@ -83,7 +93,15 @@ fun UtilityButtonBar(
             scale = scale,
             shape = RoundedCornerShape(d(0f), d(0f), d(90f), d(10f)),
             labelInsetEnd = d(23f),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .longPressGesture(
+                    longPressEnabled = false,
+                    scope = scope,
+                    onTap = onTimerTap,
+                    onLongPress = {},
+                    onProgress = {},
+                ),
         )
     }
 }

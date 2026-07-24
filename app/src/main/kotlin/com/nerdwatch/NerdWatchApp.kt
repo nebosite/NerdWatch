@@ -2,6 +2,7 @@ package com.nerdwatch
 
 import android.os.SystemClock
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -9,6 +10,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 import com.nerdwatch.chrono.ChronoFormatter
 import com.nerdwatch.chrono.Chronometer
 import com.nerdwatch.design.AvionicsPalette
@@ -39,6 +41,7 @@ private const val RUNNING_TICK_MS = 16L
 fun NerdWatchApp() {
     var chrono by remember { mutableStateOf(Chronometer()) }
     var pressProgress by remember { mutableFloatStateOf(0f) }
+    var lightOn by remember { mutableStateOf(false) }
     var monotonicNow by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     var wallNow by remember { mutableStateOf(LocalDateTime.now()) }
 
@@ -48,6 +51,14 @@ fun NerdWatchApp() {
             wallNow = LocalDateTime.now()
             delay(if (chrono.isRunning) RUNNING_TICK_MS else IDLE_TICK_MS)
         }
+    }
+
+    // Flashlight mode must not let the screen sleep. Tie the view's keep-awake
+    // flag to the toggle and clear it automatically when the mode turns off.
+    val view = LocalView.current
+    DisposableEffect(lightOn) {
+        view.keepScreenOn = lightOn
+        onDispose { view.keepScreenOn = false }
     }
 
     val dateText = wallNow.format(DATE_FORMAT).uppercase(Locale.US)
@@ -71,11 +82,13 @@ fun NerdWatchApp() {
 
     AvionicsFace(
         snapshot = snapshot,
-        palette = AvionicsPalette.DARK,
+        palette = if (lightOn) AvionicsPalette.LIGHT else AvionicsPalette.DARK,
         tokens = AvionicsTokens.DEFAULT,
         pressProgress = pressProgress,
         onChronTap = { chrono = chrono.toggle(SystemClock.uptimeMillis()) },
         onChronLongPress = { chrono = chrono.reset() },
         onChronProgress = { pressProgress = it },
+        onLightTap = { lightOn = !lightOn },
+        onTimerTap = { /* Increment 4 */ },
     )
 }

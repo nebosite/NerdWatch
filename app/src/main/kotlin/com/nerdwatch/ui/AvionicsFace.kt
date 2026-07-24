@@ -49,6 +49,8 @@ fun AvionicsFace(
     onChronTap: () -> Unit = {},
     onChronLongPress: () -> Unit = {},
     onChronProgress: (Float) -> Unit = {},
+    onLightTap: () -> Unit = {},
+    onTimerTap: () -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -115,6 +117,8 @@ fun AvionicsFace(
             onChronTap = onChronTap,
             onChronLongPress = onChronLongPress,
             onChronProgress = onChronProgress,
+            onLightTap = onLightTap,
+            onTimerTap = onTimerTap,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
 

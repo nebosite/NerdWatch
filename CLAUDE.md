@@ -89,7 +89,22 @@ design discussion before assuming any element can live on the dial.
     `cellAlignment` (bottom-anchored here) and the box is lifted by
     `SECONDS_BASELINE_NUDGE` (7.5 design px) to close the descent gap between the
     two font sizes. Verified by pixel-measuring both ink bottoms to delta 0.
-  - *Next:* LIGHT, then TIMER, then real data sources, then the WFF mirror dial.
+  - *Increment 3 DONE* — LIGHT (flashlight) mode. Tapping LIGHT swaps the whole
+    palette to `AvionicsPalette.LIGHT` and holds the screen awake
+    (`view.keepScreenOn`, cleared on toggle-off — verified via `dumpsys window`
+    showing `fl=KEEP_SCREEN_ON` appear and disappear). Per the user's "don't
+    change the physical layout" rule, the spec's `ALWAYS-ON · NO SLEEP` top label
+    is **deliberately omitted** — it would add structure to the face.
+  - *Next:* TIMER (separate screens), real data sources, battery vignette, WFF
+    mirror dial.
+
+### Hard constraint (user, 2026-07-23)
+
+**Never change the physical layout of the main face.** Colors, glow, active
+states, and overlays are fine; anything that moves or adds on-face structure is
+not. Extra *screens* are allowed (e.g. the timer's pages), but the face itself
+must not shift. This is why the chrono helper line and the LIGHT-mode label are
+both absent despite being in the design spec.
 
 ### Chronometer / long-press design
 
