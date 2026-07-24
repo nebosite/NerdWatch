@@ -140,9 +140,8 @@ fun AvionicsFace(
             scale = scale,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                // offset tuned so the (larger) widget's center stays put; the
-                // Canvas grew to hold the 2×-diameter cloud.
-                .offset(x = d(120f), y = d(87f)),
+                // Shifted ~75px further right (per request), into the upper-right.
+                .offset(x = d(190f), y = d(87f)),
         )
 
         UtilityButtonBar(

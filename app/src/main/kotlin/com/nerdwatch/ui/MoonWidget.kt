@@ -7,18 +7,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import com.nerdwatch.R
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.DesignScale
 import com.nerdwatch.moon.MoonData
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -43,6 +50,8 @@ fun MoonWidget(
 ) {
     val density = LocalDensity.current
     val sizeDp = with(density) { scale.px(diameterDesignPx).toDp() }
+    val cloudImage = ImageBitmap.imageResource(R.drawable.cloud)
+    val cloudHighlight = ImageBitmap.imageResource(R.drawable.cloud_highlight)
 
     Canvas(modifier = modifier.size(sizeDp)) {
         val center = Offset(size.width / 2f, size.height / 2f)
@@ -53,7 +62,7 @@ fun MoonWidget(
 
         drawMoonDisk(center, moonRadius, litPath, palette)
         drawRing(center, ringRadius, palette, scale)
-        if (moon.cloudy) drawNightCloud(center, moonRadius, litPath, palette, scale)
+        if (moon.cloudy) drawNightCloud(center, moonRadius, litPath, palette, cloudImage, cloudHighlight)
         moon.ringAngleDeg?.let { drawMarker(center, ringRadius, it, palette, scale) }
     }
 }
@@ -128,54 +137,44 @@ private fun DrawScope.drawMarker(
 }
 
 /**
- * The night cloud: light over the whole cloud (soft over the sky and the moon's
- * shadow), dark amber — the buttons' fill color — over the lit face, and a
- * silver rim. Twice the moon's diameter, widest at the base, pointed at the ends.
+ * The night cloud, drawn from the supplied cloud image: tinted light over the
+ * sky and the moon's shadow, tinted dark amber — the buttons' fill — over the
+ * lit face, with the highlight image laid on top for the silver lining. Sized
+ * 50% wider than the moon so it overhangs the disk on both sides.
  */
 private fun DrawScope.drawNightCloud(
     center: Offset,
     moonRadius: Float,
     litPath: Path,
     palette: AvionicsPalette,
-    scale: DesignScale,
+    cloud: ImageBitmap,
+    highlight: ImageBitmap,
 ) {
-    val light = Color.White.copy(alpha = 0.50f)
+    val light = Color(0xFFC2CAD6)                        // soft light cloud
     val darkAmber = Color(buttonFill(palette))          // matches the buttons' background
-    val silver = Color(0xFFCED6E0).copy(alpha = 0.9f)
+    val silver = Color(0xFFDCE2EC)
 
-    val cloudPath = romanticCloud(center, moonRadius)
+    // 50% wider than the moon (1.5 × diameter); height keeps the image aspect.
+    val cloudWidth = moonRadius * 3f
+    val cloudHeight = cloudWidth * cloud.height / cloud.width
+    val left = center.x - cloudWidth / 2f
+    val top = center.y - cloudHeight / 2f
 
-    drawPath(cloudPath, light)                           // light over sky + shadow
-    clipPath(litPath) { drawPath(cloudPath, darkAmber) } // dark amber over the lit face
-    drawPath(cloudPath, silver, style = Stroke(width = scale.px(1.2f)))
-}
-
-/**
- * A cloud silhouette, width = 2× the moon's diameter, with a flat wide base,
- * a bumpy top and sharp points at the far left and right.
- */
-private fun romanticCloud(center: Offset, moonRadius: Float): Path {
-    val hw = moonRadius * 2f                  // half-width → full width = 4·r = 2 diameters
-    val cx = center.x
-    val baseY = center.y + moonRadius * 0.75f
-    val leftX = cx - hw
-    val rightX = cx + hw
-    // Rounded bumps ride along a shoulder line above the base; none dominates,
-    // so the top reads as a lumpy cloud rather than a single peak.
-    val shoulder = center.y - moonRadius * 0.45f
-    val bump = moonRadius * 0.42f
-
-    return Path().apply {
-        moveTo(leftX, baseY)                                                   // left point
-        quadraticBezierTo(cx - hw * 0.86f, shoulder + bump, cx - hw * 0.66f, shoulder)
-        quadraticBezierTo(cx - hw * 0.54f, shoulder - bump, cx - hw * 0.38f, shoulder)
-        quadraticBezierTo(cx - hw * 0.24f, shoulder - bump * 1.25f, cx - hw * 0.08f, shoulder)
-        quadraticBezierTo(cx + hw * 0.06f, shoulder - bump * 1.2f, cx + hw * 0.22f, shoulder)
-        quadraticBezierTo(cx + hw * 0.38f, shoulder - bump, cx + hw * 0.54f, shoulder)
-        quadraticBezierTo(cx + hw * 0.72f, shoulder - bump * 0.7f, cx + hw * 0.84f, shoulder)
-        quadraticBezierTo(cx + hw * 0.96f, shoulder + bump, rightX, baseY)     // right point
-        close()                                                                // flat, widest base
+    fun paint(image: ImageBitmap, color: Color, alpha: Float) {
+        drawImage(
+            image = image,
+            srcOffset = IntOffset.Zero,
+            srcSize = IntSize(image.width, image.height),
+            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+            dstSize = IntSize(cloudWidth.roundToInt(), cloudHeight.roundToInt()),
+            alpha = alpha,
+            colorFilter = ColorFilter.tint(color),
+        )
     }
+
+    paint(cloud, light, 0.85f)                           // light over sky + shadow
+    clipPath(litPath) { paint(cloud, darkAmber, 0.95f) } // dark amber over the lit face
+    paint(highlight, silver, 0.9f)                       // silver highlights on top
 }
 
 /** The buttons' apparent fill: their chip color composited over the face background. */

@@ -129,6 +129,16 @@ design discussion before assuming any element can live on the dial.
   - *Emulator gotcha:* the watch face only appears after leaving the app
     (`KEYCODE_BACK`); `emu geo fix` only reaches an **active** location request,
     so spam it while `getCurrentLocation` waits.
+  - *Refinements 3 (user, 2026-07-24):* the widget was shifted ~75px right (offset
+    x `d(120)`→`d(190)`), into the upper-right. The cloud is now drawn from
+    supplied image assets (`res/drawable/cloud.png` + `cloud_highlight.png`, moved
+    there from `src/assets` which the build ignores): `cloud.png` tinted light
+    over the sky/shadow and dark amber (the buttons' fill) over the lit face via
+    `ColorFilter.tint`, then `cloud_highlight.png` laid on top as the silver
+    lining. Sized to 1.5× the moon's width (`cloudWidth = 3·moonRadius`), aspect
+    preserved. *Caveat:* the supplied cloud image is wide-and-short (~4.7:1) with
+    the fluffy body on the left and a trailing wisp, so at 1.5× the small moon it
+    reads as a thin band; revisit sizing/crop if a puffier look is wanted.
   - *Refinements 2 (user, 2026-07-24):* the sky ring now hugs the (shrunk) moon
     (`ringRadius = moonRadius + 4`); the cloud is a "romantic" bumpy silhouette,
     2× the moon's diameter, widest at a flat base and pointed at each side, drawn
