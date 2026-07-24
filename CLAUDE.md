@@ -129,7 +129,16 @@ design discussion before assuming any element can live on the dial.
   - *Emulator gotcha:* the watch face only appears after leaving the app
     (`KEYCODE_BACK`); `emu geo fix` only reaches an **active** location request,
     so spam it while `getCurrentLocation` waits.
-  - *Refinements (user, 2026-07-24):* moon disk shrunk 30%; the ring marker uses
+  - *Refinements 2 (user, 2026-07-24):* the sky ring now hugs the (shrunk) moon
+    (`ringRadius = moonRadius + 4`); the cloud is a "romantic" bumpy silhouette,
+    2× the moon's diameter, widest at a flat base and pointed at each side, drawn
+    light over the sky/shadow, **dark amber (the buttons' composited fill) over
+    the lit face**, with a silver rim. The Canvas grew (74→84 design) to hold the
+    wider cloud, with the offset re-tuned to keep the widget centered. The data
+    row was split from the appointment: the column edge is now the data width and
+    the appointment + hairline are inset 15 back to their old 34, leaving the data
+    row ~8% wider than the appointment.
+  - *Refinements 1 (user, 2026-07-24):* moon disk shrunk 30%; the ring marker uses
     a **south-facing** convention (rising/east → left, setting/west → right) — the
     `ringAngleFromHourAngle` sign flipped and its tests with it; the cloud is now
     a night-cloud (light over the moon's shadow, dark over its lit face, silver

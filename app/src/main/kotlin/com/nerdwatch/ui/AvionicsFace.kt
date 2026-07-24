@@ -82,12 +82,13 @@ fun AvionicsFace(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Narrower side padding widens the full-width data row and
-                // appointment so they reach closer to the display edge; the
-                // centered battery/date/time are unaffected.
+                // The column edge is the DATA row's width; the appointment and
+                // the hairline are inset back to 34 individually, so the data row
+                // ends up ~8% wider than the appointment. Centered
+                // battery/date/time are unaffected.
                 .padding(
-                    start = d(34f),
-                    end = d(34f),
+                    start = d(19f),
+                    end = d(19f),
                     top = d(46f),
                     bottom = d(108f),
                 )
@@ -119,11 +120,15 @@ fun AvionicsFace(
                 onProgress = onTimeProgress,
             )
 
-            Hairline(palette, scale)
+            // Inset 15 back to the appointment's 34 total, matching its width.
+            Hairline(palette, scale, Modifier.padding(horizontal = d(15f)))
 
             DataRow(snapshot, palette, tokens, scale, solar, onStepsTap, onTempTap)
 
-            NextEventChip(snapshot, palette, scale, Modifier.tapGesture(onNextTap))
+            NextEventChip(
+                snapshot, palette, scale,
+                Modifier.padding(horizontal = d(15f)).tapGesture(onNextTap),
+            )
         }
 
         // Anchored to the face (not the time row), so switching 12/24h — which
@@ -135,7 +140,9 @@ fun AvionicsFace(
             scale = scale,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(x = d(120f), y = d(92f)),
+                // offset tuned so the (larger) widget's center stays put; the
+                // Canvas grew to hold the 2×-diameter cloud.
+                .offset(x = d(120f), y = d(87f)),
         )
 
         UtilityButtonBar(
@@ -159,10 +166,10 @@ fun AvionicsFace(
 }
 
 @Composable
-private fun Hairline(palette: AvionicsPalette, scale: DesignScale) {
+private fun Hairline(palette: AvionicsPalette, scale: DesignScale, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     Box(
-        Modifier
+        modifier
             .fillMaxWidth()
             .height(with(density) { scale.px(1f).toDp() })
             .background(Color(palette.line)),
