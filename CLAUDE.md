@@ -124,6 +124,11 @@ design discussion before assuming any element can live on the dial.
     Battery is live from `BatteryManager` (verified: `adb ... battery set level 42`
     showed 42% on the face). Tapping battery / steps / temp / next opens the
     corresponding app via `SubAppLauncher` (verified: battery → Wear settings).
+    The steps and temp taps target the Galaxy Watch apps directly — Samsung
+    Health (`com.samsung.android.wear.shealth`) for steps, a Samsung/Google
+    weather app for temp — each with generic fallbacks, launching the first
+    intent that resolves. Those apps are absent on the emulator, so only the
+    graceful no-op is verifiable here; the positive path confirms on the watch.
     Steps read the hardware step counter with a graceful fallback — **the
     emulator has no such sensor, so steps still show the placeholder and can only
     be validated on the watch.** Temp stays the design's `78°` stub (spec allows

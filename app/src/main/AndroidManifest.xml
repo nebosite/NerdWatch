@@ -7,6 +7,22 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
+    <!-- Sub-apps the face opens on tap; declared so they are visible on API 30+. -->
+    <queries>
+        <package android:name="com.samsung.android.wear.shealth" />
+        <package android:name="com.google.android.apps.fitness" />
+        <package android:name="com.samsung.android.watch.weather" />
+        <package android:name="com.samsung.android.weather" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_FITNESS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_CALENDAR" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
