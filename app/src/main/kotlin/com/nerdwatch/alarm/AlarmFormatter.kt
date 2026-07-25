@@ -12,6 +12,7 @@ object AlarmFormatter {
 
     private val TIME_12 = DateTimeFormatter.ofPattern("h:mm a", Locale.US)
     private val TIME_24 = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
+    private val PEEK_12 = DateTimeFormatter.ofPattern("h:mm", Locale.US)
     private val WEEKDAY = DateTimeFormatter.ofPattern("EEE", Locale.US)
 
     /** e.g. "3:47 PM", or "WED 3:47 PM" when it falls on another day. */
@@ -23,6 +24,10 @@ object AlarmFormatter {
             time
         }
     }
+
+    /** Compact time hint for the neighbour peeks, e.g. "3:47" or "15:47". */
+    fun peek(alarm: LocalDateTime, use24Hour: Boolean): String =
+        alarm.format(if (use24Hour) TIME_24 else PEEK_12)
 
     /** e.g. "IN 5M", "IN 2H 22M", "IN 3D 4H". */
     fun relative(offsetMinutes: Long): String {

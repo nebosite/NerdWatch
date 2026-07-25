@@ -15,21 +15,31 @@ object AlarmScheduler {
 
     fun schedule(context: Context, at: Instant) {
         val manager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-
-        val intent = Intent(context, AlarmReceiver::class.java)
-        val requestCode = (at.epochSecond and 0x7FFFFFFF).toInt()
-        val pending = PendingIntent.getBroadcast(
-            context,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-
+        val pending = pendingIntent(context, at)
         val triggerAt = at.toEpochMilli()
         if (manager.canScheduleExactAlarms()) {
             manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
         } else {
             manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
         }
+    }
+
+    fun cancel(context: Context, at: Instant) {
+        val manager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val pending = pendingIntent(context, at)
+        manager.cancel(pending)
+        pending.cancel()
+    }
+
+    /** Same request code for a given instant, so schedule and cancel match up. */
+    private fun pendingIntent(context: Context, at: Instant): PendingIntent {
+        val intent = Intent(context, AlarmReceiver::class.java)
+        val requestCode = (at.epochSecond and 0x7FFFFFFF).toInt()
+        return PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
     }
 }

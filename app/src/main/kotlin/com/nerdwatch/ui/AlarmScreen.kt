@@ -3,6 +3,7 @@ package com.nerdwatch.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -30,11 +33,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import com.nerdwatch.alarm.AlarmFormatter
+import com.nerdwatch.alarm.AlarmNavigation
 import com.nerdwatch.alarm.AlarmScale
 import com.nerdwatch.design.AvionicsPalette
 import com.nerdwatch.design.DesignScale
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -43,99 +48,191 @@ import kotlin.math.roundToLong
 import kotlin.math.sin
 
 /**
- * The alarm picker. A 40px logarithmic dial rings the face from the lower-left
- * (1 minute from now) around the top to the lower-right (7 days), with a marker
- * at the chosen time; touching or dragging the dial sets it. The absolute alarm
- * time sits in the middle over the relative offset, and −1 / −5 / SET / +1 / +5
- * sit below. SET schedules and returns to the face.
+ * The alarm picker / manager. A 40px logarithmic dial rings the face (lower-left
+ * = 1 minute from now, over the top, to lower-right = 7 days); touch or drag it
+ * to set the time. The chosen alarm sits in the middle, flanked by the previous
+ * and next active alarms in small text — swipe to bring a neighbour into the
+ * middle to edit or clear it. ADD schedules (or updates) it and returns to the
+ * face; CLEAR deletes it and shows CLEARED (touch the dial to set a new one);
+ * BACK returns without changes.
  */
+private const val SWIPE_THRESHOLD = 40f
+
 @Composable
 fun AlarmScreen(
     defaultOffsetMinutes: Double,
     baseInstant: Instant,
     baseNow: LocalDateTime,
+    alarms: List<Instant>,
     palette: AvionicsPalette,
     scale: DesignScale,
     use24Hour: Boolean,
-    onSet: (Instant) -> Unit,
+    onAdd: (original: Instant?, at: Instant) -> Unit,
+    onClear: (original: Instant) -> Unit,
     onBack: () -> Unit,
 ) {
     val density = LocalDensity.current
     fun d(px: Float): Dp = with(density) { scale.px(px).toDp() }
+    val zone = ZoneId.systemDefault()
 
+    // The slot being shown: its offset (null = CLEARED) and, if it came from an
+    // existing alarm, that alarm's instant (so ADD updates and CLEAR deletes it).
     var offset by remember {
-        mutableDoubleStateOf(defaultOffsetMinutes.coerceIn(AlarmScale.MIN_MINUTES, AlarmScale.MAX_MINUTES))
+        mutableStateOf<Double?>(defaultOffsetMinutes.coerceIn(AlarmScale.MIN_MINUTES, AlarmScale.MAX_MINUTES))
     }
+    var original by remember { mutableStateOf<Instant?>(null) }
+
+    fun slotInstant(): Instant? = offset?.let { baseInstant.plusSeconds(it.roundToLong() * 60) }
+    fun offsetOf(alarm: Instant): Double =
+        ((alarm.epochSecond - baseInstant.epochSecond) / 60.0).coerceIn(AlarmScale.MIN_MINUTES, AlarmScale.MAX_MINUTES)
+    fun others(): List<Instant> = alarms.filter { it != original }
+    fun localOf(alarm: Instant): LocalDateTime = LocalDateTime.ofInstant(alarm, zone)
+
     fun nudge(delta: Long) {
-        offset = (offset + delta).coerceIn(AlarmScale.MIN_MINUTES, AlarmScale.MAX_MINUTES)
+        val current = offset ?: 0.0
+        offset = (current + delta).coerceIn(AlarmScale.MIN_MINUTES, AlarmScale.MAX_MINUTES)
+    }
+    fun swipeToNext() {
+        AlarmNavigation.next(others(), slotInstant() ?: baseInstant)?.let { original = it; offset = offsetOf(it) }
+    }
+    fun swipeToPrevious() {
+        AlarmNavigation.previous(others(), slotInstant() ?: baseInstant)?.let { original = it; offset = offsetOf(it) }
     }
 
     BackHandler(onBack = onBack)
 
     val bandWidth = scale.px(40f)
+    val prev = AlarmNavigation.previous(others(), slotInstant() ?: baseInstant)
+    val next = AlarmNavigation.next(others(), slotInstant() ?: baseInstant)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(palette.bgTop), Color(palette.bgBottom))))
-            .pointerInput(Unit) {
-                detectTapGestures { pos -> offsetFromTouch(pos, size.width, size.height, bandWidth)?.let { offset = it } }
-            }
-            .pointerInput(Unit) {
-                detectDragGestures { change, _ ->
-                    offsetFromTouch(change.position, size.width, size.height, bandWidth)?.let { offset = it }
-                }
-            },
+            .background(Brush.verticalGradient(listOf(Color(palette.bgTop), Color(palette.bgBottom)))),
     ) {
-        AlarmDial(offset = offset, palette = palette, bandWidth = bandWidth, scale = scale)
+        // The dial owns its own tap/drag (gated to the band), so it never
+        // competes with the centre's horizontal swipe navigation.
+        AlarmDial(
+            offset = offset,
+            palette = palette,
+            bandWidth = bandWidth,
+            scale = scale,
+            onSet = { offset = it },
+        )
 
-        val alarm = baseNow.plusMinutes(offset.roundToLong())
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            FixedWidthNumerals(
-                text = AlarmFormatter.absolute(alarm, baseNow, use24Hour),
-                fontSizePx = scale.px(40f),
-                color = Color(palette.fg),
-                weight = FontWeight.Bold,
-                glowColor = if (palette.glow) Color(palette.accent) else null,
-                scaleFactor = scale.factor,
-                cellAlignment = Alignment.BottomCenter,
-            )
+            // Peeks flank a centered value; a horizontal swipe navigates alarms.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = d(48f))
+                    .pointerInput(alarms, original, offset) {
+                        var dx = 0f
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                if (dx <= -SWIPE_THRESHOLD) swipeToNext() else if (dx >= SWIPE_THRESHOLD) swipeToPrevious()
+                                dx = 0f
+                            },
+                            onHorizontalDrag = { _, amount -> dx += amount },
+                        )
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                prev?.let {
+                    StencilText(
+                        AlarmFormatter.peek(localOf(it), use24Hour), scale.px(12f), Color(palette.dim), scale.px(1f),
+                        modifier = Modifier.align(Alignment.CenterStart),
+                    )
+                }
+                val slotLocal = offset?.let { baseNow.plusMinutes(it.roundToLong()) }
+                if (slotLocal != null) {
+                    FixedWidthNumerals(
+                        text = AlarmFormatter.absolute(slotLocal, baseNow, use24Hour),
+                        fontSizePx = scale.px(38f),
+                        color = Color(palette.fg),
+                        weight = FontWeight.Bold,
+                        glowColor = if (palette.glow) Color(palette.accent) else null,
+                        scaleFactor = scale.factor,
+                        cellAlignment = Alignment.BottomCenter,
+                    )
+                } else {
+                    StencilText("CLEARED", scale.px(24f), Color(palette.accent), scale.px(3f))
+                }
+                next?.let {
+                    StencilText(
+                        AlarmFormatter.peek(localOf(it), use24Hour), scale.px(12f), Color(palette.dim), scale.px(1f),
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
+                }
+            }
+
             Spacer(Modifier.height(d(2f)))
             StencilText(
-                text = AlarmFormatter.relative(offset.roundToLong()),
+                text = offset?.let { AlarmFormatter.relative(it.roundToLong()) } ?: "TOUCH DIAL TO SET",
                 fontSizePx = scale.px(11f),
                 color = Color(palette.dim),
                 trackingPx = scale.px(2f),
             )
-            Spacer(Modifier.height(d(14f)))
+            Spacer(Modifier.height(d(12f)))
 
             Row(horizontalArrangement = Arrangement.spacedBy(d(5f))) {
-                StencilButton("-5", 52f, 48f, 22f, palette, scale, onTap = { nudge(-5) })
-                StencilButton("-1", 52f, 48f, 22f, palette, scale, onTap = { nudge(-1) })
+                StencilButton("-5", 50f, 44f, 21f, palette, scale, onTap = { nudge(-5) })
+                StencilButton("-1", 50f, 44f, 21f, palette, scale, onTap = { nudge(-1) })
                 StencilButton(
-                    "SET", 60f, 48f, 15f, palette, scale, numeric = false, trackingPx = 2f,
-                    onTap = { onSet(baseInstant.plusSeconds((offset.roundToLong()) * 60)) },
+                    "ADD", 58f, 44f, 15f, palette, scale, numeric = false, trackingPx = 2f,
+                    onTap = { slotInstant()?.let { onAdd(original, it) } },
                 )
-                StencilButton("+1", 52f, 48f, 22f, palette, scale, onTap = { nudge(1) })
-                StencilButton("+5", 52f, 48f, 22f, palette, scale, onTap = { nudge(5) })
+                StencilButton("+1", 50f, 44f, 21f, palette, scale, onTap = { nudge(1) })
+                StencilButton("+5", 50f, 44f, 21f, palette, scale, onTap = { nudge(5) })
+            }
+            Spacer(Modifier.height(d(6f)))
+            Row(horizontalArrangement = Arrangement.spacedBy(d(6f))) {
+                StencilButton(
+                    "CLEAR", 100f, 40f, 13f, palette, scale, numeric = false, trackingPx = 2f,
+                    onTap = {
+                        original?.let { onClear(it) }
+                        original = null
+                        offset = null
+                    },
+                )
+                StencilButton(
+                    "BACK", 100f, 40f, 13f, palette, scale, numeric = false, trackingPx = 2f,
+                    onTap = onBack,
+                )
             }
         }
     }
 }
 
-/** Draws the dial track, a few log tick marks, and the alarm marker. */
+/** Draws the dial track, a few log tick marks, and the alarm marker (if set). */
 @Composable
-private fun AlarmDial(offset: Double, palette: AvionicsPalette, bandWidth: Float, scale: DesignScale) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
+private fun AlarmDial(
+    offset: Double?,
+    palette: AvionicsPalette,
+    bandWidth: Float,
+    scale: DesignScale,
+    onSet: (Double) -> Unit,
+) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures { pos -> offsetFromTouch(pos, size.width, size.height, bandWidth)?.let(onSet) }
+            }
+            .pointerInput(Unit) {
+                detectDragGestures { change, _ ->
+                    offsetFromTouch(change.position, size.width, size.height, bandWidth)?.let(onSet)
+                }
+            },
+    ) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val outer = size.minDimension / 2f - scale.px(2f)
         val mid = outer - bandWidth / 2f
 
-        // Track (the 40px band), leaving the 90° bottom gap.
         drawArc(
             color = Color(palette.line),
             startAngle = 135f,           // lower-left in Compose's 3-o'clock-origin convention
@@ -146,13 +243,13 @@ private fun AlarmDial(offset: Double, palette: AvionicsPalette, bandWidth: Float
             style = Stroke(width = bandWidth),
         )
 
-        // Reference ticks at 1m, 1h, 1d, 7d.
         listOf(1.0, 60.0, 1440.0, 10080.0).forEach { minutes ->
             drawRadialMark(center, outer, bandWidth, AlarmScale.fraction(minutes), Color(palette.dim), scale.px(1.5f))
         }
 
-        // The alarm marker.
-        drawRadialMark(center, outer, bandWidth, AlarmScale.fraction(offset), Color(palette.accent), scale.px(4f))
+        offset?.let {
+            drawRadialMark(center, outer, bandWidth, AlarmScale.fraction(it), Color(palette.accent), scale.px(4f))
+        }
     }
 }
 
@@ -180,7 +277,7 @@ private fun DrawScope.drawRadialMark(
 
 /**
  * Minutes-from-now for a touch on the dial, or null when the touch is in the
- * inner (buttons/time) area rather than on the band.
+ * inner (peeks/buttons) area rather than on the band.
  */
 private fun offsetFromTouch(pos: Offset, width: Int, height: Int, bandWidth: Float): Double? {
     val cx = width / 2f
@@ -189,8 +286,6 @@ private fun offsetFromTouch(pos: Offset, width: Int, height: Int, bandWidth: Flo
     val dy = pos.y - cy
     val distance = hypot(dx, dy)
     val outer = minOf(width, height) / 2f
-    // Only the band (and a little inward) drives the dial; deeper touches are for
-    // the centered value and buttons.
     if (distance < outer - bandWidth - 24f) return null
 
     var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())) + 90.0   // clockwise from top

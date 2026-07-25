@@ -82,6 +82,8 @@ fun NerdWatchApp() {
     var alarmBaseInstant by remember { mutableStateOf(Instant.now()) }
     var alarmBaseLocal by remember { mutableStateOf(LocalDateTime.now()) }
     var alarmDefaultOffset by remember { mutableDoubleStateOf(0.0) }
+    // Active alarms, by time (in-memory until calendar/persistence lands).
+    var alarms by remember { mutableStateOf<List<Instant>>(emptyList()) }
 
     val context = LocalContext.current
 
@@ -220,12 +222,19 @@ fun NerdWatchApp() {
                 defaultOffsetMinutes = alarmDefaultOffset,
                 baseInstant = alarmBaseInstant,
                 baseNow = alarmBaseLocal,
+                alarms = alarms,
                 palette = palette,
                 scale = scale,
                 use24Hour = use24Hour,
-                onSet = { alarmInstant ->
-                    AlarmScheduler.schedule(context, alarmInstant)
+                onAdd = { original, at ->
+                    original?.let { AlarmScheduler.cancel(context, it) }
+                    AlarmScheduler.schedule(context, at)
+                    alarms = (alarms.filter { it != original } + at).distinct().sorted()
                     screen = Screen.FACE
+                },
+                onClear = { original ->
+                    AlarmScheduler.cancel(context, original)
+                    alarms = alarms.filter { it != original }
                 },
                 onBack = { screen = Screen.FACE },
             )

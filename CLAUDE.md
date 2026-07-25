@@ -171,11 +171,25 @@ design discussion before assuming any element can live on the dial.
     and the arc-angle mapping incl. the bottom-gap snap) and
     `alarm/AlarmFormatter.kt` (absolute "h:mm a"/weekday + relative "IN 2H 22M").
     11 tests.
-  - Real scheduling: `AlarmScheduler` uses `AlarmManager.setExactAndAllowWhileIdle`
-    (permission `USE_EXACT_ALARM`) to fire `AlarmReceiver`, which posts a
-    high-importance notification + vibration (`POST_NOTIFICATIONS`, requested at
-    launch). Verified on the emulator: dial drag, the ± buttons, and SET
-    registering a real `RTC_WAKEUP` alarm in `dumpsys alarm`.
+  - Real scheduling: `AlarmScheduler` schedule/cancel via
+    `AlarmManager.setExactAndAllowWhileIdle` (permission `USE_EXACT_ALARM`,
+    request code = the instant's epoch second) firing `AlarmReceiver`, which posts
+    a high-importance notification + vibration (`POST_NOTIFICATIONS`, requested at
+    launch).
+  - *Multi-alarm (user, 2026-07-25):* SET is now **ADD** (adds/updates). A second
+    row has **CLEAR** (deletes the current alarm; shows `CLEARED`, and touching
+    the dial sets a new one) and **BACK** (to the face, no change). The active
+    alarms are held in-memory (`alarms: List<Instant>` in the app) sorted by time;
+    the previous/next by time show as small **peeks** flanking the centre
+    (`AlarmNavigation`, tested), and a **horizontal swipe** on the centre brings a
+    neighbour in to edit or clear. Gesture split that matters: the dial's tap/drag
+    lives on the dial **Canvas** and the swipe on the centre box — putting both on
+    the parent made a swipe bleed into the dial and mis-clear. Verified on the
+    emulator: add two, peeks, swipe-to-next, clear→CLEARED, touch-to-reset, back.
+  - *Caveats:* alarms are in-memory (reset on app restart though the AlarmManager
+    registrations linger until the emulator cold-boots — no BOOT_COMPLETED
+    re-register); peeks show time only, so a multi-day neighbour reads ambiguously
+    (the centre uses the weekday form).
   - *Placeholder:* the appointment time is still the design stub (`T-2H 37M` →
     `APPOINTMENT_MINUTES = 157`); the default seed switches to the real next event
     once calendar data lands.
