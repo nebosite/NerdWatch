@@ -184,6 +184,7 @@ fun NerdWatchApp() {
                 onBatteryTap = { SubAppLauncher.openBattery(context) },
                 onStepsTap = { SubAppLauncher.openSteps(context) },
                 onTempTap = { SubAppLauncher.openWeather(context) },
+                onDateTap = { SubAppLauncher.openCalendar(context) },
                 onNextTap = {
                     alarmBaseInstant = Instant.now()
                     alarmBaseLocal = LocalDateTime.now()

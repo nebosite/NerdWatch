@@ -55,6 +55,7 @@ fun AvionicsFace(
     onStepsTap: () -> Unit = {},
     onTempTap: () -> Unit = {},
     onNextTap: () -> Unit = {},
+    onDateTap: () -> Unit = {},
     solar: SolarData = SolarData.UNKNOWN,
     onTimeLongPress: () -> Unit = {},
     onTimeProgress: (Float) -> Unit = {},
@@ -101,7 +102,10 @@ fun AvionicsFace(
                 modifier = Modifier.tapGesture(onBatteryTap),
             )
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.tapGesture(onDateTap),
+            ) {
                 StencilText(
                     text = snapshot.dateText,
                     fontSizePx = scale.px(tokens.metaFontPx),

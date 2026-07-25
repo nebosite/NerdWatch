@@ -240,10 +240,16 @@ design discussion before assuming any element can live on the dial.
     Steps read the hardware step counter with a graceful fallback — **the
     emulator has no such sensor, so steps still show the placeholder and can only
     be validated on the watch.** Temp stays the design's `78°` stub (spec allows
-    it). Calendar *data* is deferred until a paired account exists; only its tap
-    (open calendar) is wired. Taps use a footprint-free `tapGesture`, so the face
-    layout is unchanged; the spec's ≥44px touch targets are not enforced where
-    that would enlarge an element (the no-layout-shift rule wins).
+    it). Calendar *data* is deferred until a paired account exists. Taps use a
+    footprint-free `tapGesture`, so the face layout is unchanged; the spec's ≥44px
+    touch targets are not enforced where that would enlarge an element (the
+    no-layout-shift rule wins).
+  - *Tap targets (user, 2026-07-25):* battery → settings, steps → the exercise
+    app (Samsung Health), temp → the weather app, **date → the calendar**
+    (`onDateTap`; the appointment tap now opens the alarm tool instead), next →
+    the alarm tool. On the Google emulator none of steps/weather/calendar apps
+    exist, so each is the verified graceful no-op; the positive paths confirm on
+    the watch.
   - *Increment 6 DONE* — low-battery warning. Below 20% a red glow hugs the
     circle's edge and pulses 0.35↔0.95 over every screen, and the battery readout
     turns `warn`. The vignette is a `Canvas` with no pointer modifier, so it never
