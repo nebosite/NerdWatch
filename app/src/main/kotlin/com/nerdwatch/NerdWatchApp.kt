@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import com.nerdwatch.alarm.AlarmScheduler
 import com.nerdwatch.chrono.ChronoFormatter
 import com.nerdwatch.chrono.Chronometer
 import com.nerdwatch.data.SubAppLauncher
@@ -32,6 +34,7 @@ import com.nerdwatch.moon.rememberMoonData
 import com.nerdwatch.solar.rememberSolarData
 import com.nerdwatch.timer.CountdownTimer
 import com.nerdwatch.timer.TimerFormatter
+import com.nerdwatch.ui.AlarmScreen
 import com.nerdwatch.ui.AvionicsFace
 import com.nerdwatch.ui.FaceSnapshot
 import com.nerdwatch.ui.LowBatteryVignette
@@ -39,6 +42,7 @@ import com.nerdwatch.ui.TimeUpOverlay
 import com.nerdwatch.ui.TimerPresetScreen
 import com.nerdwatch.ui.TimerRunningScreen
 import kotlinx.coroutines.delay
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -56,7 +60,11 @@ private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE ·
 private const val IDLE_TICK_MS = 200L
 private const val RUNNING_TICK_MS = 16L
 
-private enum class Screen { FACE, TIMER_PRESET, TIMER_RUNNING }
+/** Placeholder next-appointment offset until real calendar data lands (T-2H 37M). */
+private const val APPOINTMENT_MINUTES = 157L
+private const val ALARM_LEAD_MINUTES = 15L
+
+private enum class Screen { FACE, TIMER_PRESET, TIMER_RUNNING, ALARM }
 
 @Composable
 fun NerdWatchApp() {
@@ -69,6 +77,11 @@ fun NerdWatchApp() {
     var use24Hour by remember { mutableStateOf(false) }
     var monotonicNow by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     var wallNow by remember { mutableStateOf(LocalDateTime.now()) }
+
+    // Captured when the alarm screen opens, so its "from now" scale is stable.
+    var alarmBaseInstant by remember { mutableStateOf(Instant.now()) }
+    var alarmBaseLocal by remember { mutableStateOf(LocalDateTime.now()) }
+    var alarmDefaultOffset by remember { mutableDoubleStateOf(0.0) }
 
     val context = LocalContext.current
 
@@ -83,6 +96,7 @@ fun NerdWatchApp() {
                 Manifest.permission.ACTIVITY_RECOGNITION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.POST_NOTIFICATIONS,
             ),
         )
     }
@@ -168,7 +182,12 @@ fun NerdWatchApp() {
                 onBatteryTap = { SubAppLauncher.openBattery(context) },
                 onStepsTap = { SubAppLauncher.openSteps(context) },
                 onTempTap = { SubAppLauncher.openWeather(context) },
-                onNextTap = { SubAppLauncher.openCalendar(context) },
+                onNextTap = {
+                    alarmBaseInstant = Instant.now()
+                    alarmBaseLocal = LocalDateTime.now()
+                    alarmDefaultOffset = (APPOINTMENT_MINUTES - ALARM_LEAD_MINUTES).toDouble()
+                    screen = Screen.ALARM
+                },
                 solar = solar,
                 onTimeLongPress = { use24Hour = !use24Hour },
                 onTimeProgress = { pressProgress = it },
@@ -195,6 +214,20 @@ fun NerdWatchApp() {
                     screen = Screen.TIMER_PRESET
                 },
                 onBackToFace = { screen = Screen.FACE },
+            )
+
+            Screen.ALARM -> AlarmScreen(
+                defaultOffsetMinutes = alarmDefaultOffset,
+                baseInstant = alarmBaseInstant,
+                baseNow = alarmBaseLocal,
+                palette = palette,
+                scale = scale,
+                use24Hour = use24Hour,
+                onSet = { alarmInstant ->
+                    AlarmScheduler.schedule(context, alarmInstant)
+                    screen = Screen.FACE
+                },
+                onBack = { screen = Screen.FACE },
             )
         }
 

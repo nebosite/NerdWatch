@@ -158,6 +158,30 @@ design discussion before assuming any element can live on the dial.
     column side padding was trimmed 46→34 so the data row and chip reach closer
     to the display edge.
 
+- **Alarm tool (user request, 2026-07-25).** Tapping the appointment chip opens
+  a radial alarm picker (`Screen.ALARM`). A **40px-wide logarithmic dial** rings
+  the face from the lower-left (1 minute from now) clockwise over the top to the
+  lower-right (7 days), 270° sweep with a 90° gap at the bottom; an amber marker
+  shows the chosen time and touching/dragging the dial sets it (angle → fraction
+  → log offset). The absolute alarm time sits in the middle over the relative
+  offset, with `-5 / -1 / SET / +1 / +5` below; SET schedules and returns to the
+  face, system-back returns without setting. Default is 15 min before the
+  appointment.
+  - Pure + tested: `alarm/AlarmScale.kt` (log scale `1..10080` min ↔ fraction,
+    and the arc-angle mapping incl. the bottom-gap snap) and
+    `alarm/AlarmFormatter.kt` (absolute "h:mm a"/weekday + relative "IN 2H 22M").
+    11 tests.
+  - Real scheduling: `AlarmScheduler` uses `AlarmManager.setExactAndAllowWhileIdle`
+    (permission `USE_EXACT_ALARM`) to fire `AlarmReceiver`, which posts a
+    high-importance notification + vibration (`POST_NOTIFICATIONS`, requested at
+    launch). Verified on the emulator: dial drag, the ± buttons, and SET
+    registering a real `RTC_WAKEUP` alarm in `dumpsys alarm`.
+  - *Placeholder:* the appointment time is still the design stub (`T-2H 37M` →
+    `APPOINTMENT_MINUTES = 157`); the default seed switches to the real next event
+    once calendar data lands.
+  - *Emulator note:* the Wear AVD needs ~2.5GB commit to boot; if the host is
+    memory-pressured, launch with `-memory 1536`.
+
 - **Layer 3 (Grow by Observation): in progress.**
   - *Increment 1 DONE* — the Avionics face at rest renders on the 480x480 Wear OS
     6 emulator: battery, date, hairlines, glowing time with fixed-width cells,
