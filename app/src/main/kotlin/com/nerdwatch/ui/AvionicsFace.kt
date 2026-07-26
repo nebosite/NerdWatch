@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -149,13 +150,15 @@ fun AvionicsFace(
         )
 
         // The battery, now 2× size, in the moon's old upper-right spot — dropped
-        // below the date line so its wider glyphs clear the date.
+        // below the date line so its wider glyphs clear the date, nudged down and
+        // squeezed 10% narrower per request.
         BatteryReadout(
             snapshot.batteryPercent, batteryColor, accent, scale, tokens,
             fontScale = 2f,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(x = d(150f), y = d(120f))
+                .offset(x = d(150f), y = d(143f))
+                .graphicsLayer(scaleX = 0.9f)
                 .tapGesture(onBatteryTap),
         )
 
