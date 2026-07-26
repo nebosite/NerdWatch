@@ -77,8 +77,8 @@ private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
     ) {
         FixedWidthNumerals(
             text = text,
-            // 80% larger than the previous 16px Kp value, per request.
-            fontSizePx = scale.px(16f * 1.8f),
+            // 80% larger than the original 16px, then shrunk 10% per request.
+            fontSizePx = scale.px(16f * 1.8f * 0.9f),
             color = Color(palette.fg),
             weight = FontWeight.Bold,
             cellAlignment = Alignment.BottomCenter,

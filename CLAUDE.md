@@ -147,8 +147,15 @@ design discussion before assuming any element can live on the dial.
     the inverse-contrast rule — silver over the sky/shadow, dark amber over the
     lit face (a second `clipPath(litPath)` pass), so clouds crossing the bright
     moon read as uniformly dark. Also (face-wide): the date font is +50%, the
-    battery `%` is `FontWeight.Bold` (synthetic — Michroma ships a single weight,
-    so it's a modest faux-bold).
+    battery `%` is `FontWeight.Bold`.
+  - *Refinements 5 (user, 2026-07-26):* the lit face is now the supplied
+    `res/drawable/fullmoon.png` (a real textured moon) tinted to `palette.fg` via
+    **`BlendMode.Modulate`** (multiply keeps the craters while colouring it amber),
+    clipped to `litPath`; the shadow stays a flat `palette.line` disk. The battery
+    readout switched from Michroma to **Rajdhani Bold** (`FixedWidthNumerals`) for
+    a real bold. The Kp value font was trimmed 10% (`→ 16·1.8·0.9`). The face
+    column's bottom padding was cut `108→87` to scoot the content down and halve
+    the next-event chip's gap to the buttons (measured 22→11px).
   - *Refinements 2 (user, 2026-07-24):* the sky ring now hugs the (shrunk) moon
     (`ringRadius = moonRadius + 4`); the cloud is a "romantic" bumpy silhouette,
     2× the moon's diameter, widest at a flat base and pointed at each side, drawn

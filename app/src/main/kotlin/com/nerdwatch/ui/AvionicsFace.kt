@@ -91,7 +91,9 @@ fun AvionicsFace(
                     start = d(19f),
                     end = d(19f),
                     top = d(46f),
-                    bottom = d(108f),
+                    // Reduced from 108 to scoot the content (and the next-event
+                    // chip) down, halving the gap to the button tops.
+                    bottom = d(87f),
                 )
 ,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -197,12 +199,12 @@ private fun BatteryReadout(
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         AccentBar(accent, scale)
         Spacer(Modifier.width(d(10f)))
-        StencilText(
+        FixedWidthNumerals(
             text = "$percent%",
             fontSizePx = scale.px(tokens.metaFontPx),
             color = textColor,
-            trackingPx = scale.px(1f),
-            fontWeight = FontWeight.Bold,
+            weight = FontWeight.Bold,
+            cellAlignment = Alignment.BottomCenter,
         )
         Spacer(Modifier.width(d(10f)))
         AccentBar(accent, scale)

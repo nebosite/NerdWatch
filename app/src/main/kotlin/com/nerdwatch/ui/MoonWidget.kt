@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
@@ -52,6 +53,7 @@ fun MoonWidget(
     val sizeDp = with(density) { scale.px(diameterDesignPx).toDp() }
     val cloudImage = ImageBitmap.imageResource(R.drawable.cloud)
     val cloudHighlight = ImageBitmap.imageResource(R.drawable.cloud_highlight)
+    val fullMoon = ImageBitmap.imageResource(R.drawable.fullmoon)
 
     Canvas(modifier = modifier.size(sizeDp)) {
         val center = Offset(size.width / 2f, size.height / 2f)
@@ -60,7 +62,7 @@ fun MoonWidget(
 
         val litPath = litRegionPath(center, moonRadius, moon.phaseFraction)
 
-        drawMoonDisk(center, moonRadius, litPath, palette)
+        drawMoonDisk(center, moonRadius, litPath, palette, fullMoon)
         drawRing(center, ringRadius, palette, scale)
         if (moon.cloudCount >= 1) {
             drawNightCloud(center, moonRadius, litPath, palette, cloudImage, cloudHighlight, moon.cloudCount)
@@ -69,10 +71,29 @@ fun MoonWidget(
     }
 }
 
-/** Dark disk with the lit phase painted on top. */
-private fun DrawScope.drawMoonDisk(center: Offset, r: Float, litPath: Path, palette: AvionicsPalette) {
+/**
+ * Dark shadow disk with the lit phase on top: the textured full-moon image,
+ * tinted to the palette via Modulate (multiply) so the craters survive the
+ * colouring, clipped to the illuminated region.
+ */
+private fun DrawScope.drawMoonDisk(
+    center: Offset,
+    r: Float,
+    litPath: Path,
+    palette: AvionicsPalette,
+    fullMoon: ImageBitmap,
+) {
     drawCircle(color = Color(palette.line), radius = r, center = center)
-    drawPath(litPath, Color(palette.fg))
+    clipPath(litPath) {
+        drawImage(
+            image = fullMoon,
+            srcOffset = IntOffset.Zero,
+            srcSize = IntSize(fullMoon.width, fullMoon.height),
+            dstOffset = IntOffset((center.x - r).roundToInt(), (center.y - r).roundToInt()),
+            dstSize = IntSize((r * 2f).roundToInt(), (r * 2f).roundToInt()),
+            colorFilter = ColorFilter.tint(Color(palette.fg), BlendMode.Modulate),
+        )
+    }
 }
 
 /**
