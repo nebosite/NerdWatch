@@ -13,3 +13,7 @@ local.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# JVM crash dumps (e.g. from an out-of-memory Gradle daemon)
+hs_err_pid*.log
+replay_pid*.log
