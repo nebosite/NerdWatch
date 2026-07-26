@@ -279,6 +279,15 @@ best-effort with fallbacks until then: **steps** (needs a real step counter /
 Health Services daily aggregation) and **the next calendar event** (needs a
 synced calendar account). Don't mark either "done" from an emulator screenshot.
 
+### Battery / moon swap (user, 2026-07-26)
+
+The battery and the moon widget **swapped places**: the moon is now the
+top-centre element (absolute overlay, `align(TopCenter).offset(x=0, y=6)`), and
+the battery moved to the moon's old upper-right spot (`offset(x=150, y=120)`) at
+**2× size** (`BatteryReadout(fontScale = 2f)` scales the font, accent bars, and
+spacing). The battery is no longer in the column flow, so the column's top
+padding was raised (46→78) to give the top-centre moon room above the date.
+
 ### Clock format (user, 2026-07-24)
 
 The face defaults to **12-hour** (`h:mm`, no leading zero). A **long-press on the

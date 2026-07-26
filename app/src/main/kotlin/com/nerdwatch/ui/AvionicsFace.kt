@@ -90,7 +90,9 @@ fun AvionicsFace(
                 .padding(
                     start = d(19f),
                     end = d(19f),
-                    top = d(46f),
+                    // Extra top room so the (now top-centre) moon widget clears the
+                    // date; the battery moved out to the upper-right overlay.
+                    top = d(78f),
                     // Reduced from 108 to scoot the content (and the next-event
                     // chip) down, halving the gap to the button tops.
                     bottom = d(87f),
@@ -101,11 +103,6 @@ fun AvionicsFace(
             // row colliding with the next-event chip.
             verticalArrangement = Arrangement.spacedBy(d(5f), Alignment.CenterVertically),
         ) {
-            BatteryReadout(
-                snapshot.batteryPercent, batteryColor, accent, scale, tokens,
-                modifier = Modifier.tapGesture(onBatteryTap),
-            )
-
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.tapGesture(onDateTap),
@@ -140,17 +137,26 @@ fun AvionicsFace(
             )
         }
 
-        // Anchored to the face (not the time row), so switching 12/24h — which
-        // changes the time's width — never nudges the moon. Sits right of the
-        // centered battery/date and above the seconds box.
+        // Swapped with the battery: the moon is now top-centre, the battery
+        // upper-right. Anchored absolutely so the 12/24h toggle never nudges it.
         MoonWidget(
             moon = moon,
             palette = palette,
             scale = scale,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                // Upper-right; pulled back ~40px from the far-right edge.
-                .offset(x = d(152f), y = d(87f)),
+                .offset(x = d(0f), y = d(6f)),
+        )
+
+        // The battery, now 2× size, in the moon's old upper-right spot — dropped
+        // below the date line so its wider glyphs clear the date.
+        BatteryReadout(
+            snapshot.batteryPercent, batteryColor, accent, scale, tokens,
+            fontScale = 2f,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(x = d(150f), y = d(120f))
+                .tapGesture(onBatteryTap),
         )
 
         UtilityButtonBar(
@@ -192,32 +198,33 @@ private fun BatteryReadout(
     scale: DesignScale,
     tokens: AvionicsTokens,
     modifier: Modifier = Modifier,
+    fontScale: Float = 1f,
 ) {
     val density = LocalDensity.current
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
 
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        AccentBar(accent, scale)
-        Spacer(Modifier.width(d(10f)))
+        AccentBar(accent, scale, 20f * fontScale)
+        Spacer(Modifier.width(d(10f * fontScale)))
         FixedWidthNumerals(
             text = "$percent%",
-            fontSizePx = scale.px(tokens.metaFontPx),
+            fontSizePx = scale.px(tokens.metaFontPx * fontScale),
             color = textColor,
             weight = FontWeight.Bold,
             cellAlignment = Alignment.BottomCenter,
         )
-        Spacer(Modifier.width(d(10f)))
-        AccentBar(accent, scale)
+        Spacer(Modifier.width(d(10f * fontScale)))
+        AccentBar(accent, scale, 20f * fontScale)
     }
 }
 
 @Composable
-private fun AccentBar(accent: Color, scale: DesignScale) {
+private fun AccentBar(accent: Color, scale: DesignScale, heightDesignPx: Float = 20f) {
     val density = LocalDensity.current
     Box(
         Modifier
             .width(with(density) { scale.px(2f).toDp() })
-            .height(with(density) { scale.px(20f).toDp() })
+            .height(with(density) { scale.px(heightDesignPx).toDp() })
             .background(accent),
     )
 }
