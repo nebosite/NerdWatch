@@ -46,10 +46,10 @@ fun SolarCell(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         StencilText(
-            text = "SOLAR",
+            text = "Kp Index",
             fontSizePx = scale.px(13f),
             color = Color(palette.dim),
-            trackingPx = scale.px(2f),
+            trackingPx = scale.px(1.5f),
         )
         Spacer(Modifier.height(d(3f)))
         Row(horizontalArrangement = Arrangement.spacedBy(d(4f))) {
@@ -69,7 +69,7 @@ private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
 
     Box(
         modifier = Modifier
-            .width(d(42f))
+            .width(d(52f))
             .clip(RoundedCornerShape(d(4f)))
             .background(background)
             .padding(vertical = d(2f)),
@@ -77,7 +77,8 @@ private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
     ) {
         FixedWidthNumerals(
             text = text,
-            fontSizePx = scale.px(16f),
+            // 80% larger than the previous 16px Kp value, per request.
+            fontSizePx = scale.px(16f * 1.8f),
             color = Color(palette.fg),
             weight = FontWeight.Bold,
             cellAlignment = Alignment.BottomCenter,

@@ -176,9 +176,10 @@ private fun DrawScope.drawNightCloud(
                 colorFilter = ColorFilter.tint(color),
             )
         }
-        paint(cloud, light, 0.85f)                           // light over sky + shadow
-        clipPath(litPath) { paint(cloud, darkAmber, 0.95f) } // dark amber over the lit face
-        paint(highlight, silver, 0.9f)                       // silver highlights on top
+        paint(cloud, light, 0.85f)                              // light over sky + shadow
+        clipPath(litPath) { paint(cloud, darkAmber, 0.95f) }    // dark amber over the lit face
+        paint(highlight, silver, 0.9f)                          // silver highlights over sky + shadow
+        clipPath(litPath) { paint(highlight, darkAmber, 0.9f) } // dark highlights over the lit face
     }
 
     drawCloudAt(center.x, topY)

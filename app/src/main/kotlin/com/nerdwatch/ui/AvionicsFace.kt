@@ -95,7 +95,9 @@ fun AvionicsFace(
                 )
 ,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(d(10f), Alignment.CenterVertically),
+            // Tightened to absorb the enlarged date and Kp fonts without the data
+            // row colliding with the next-event chip.
+            verticalArrangement = Arrangement.spacedBy(d(5f), Alignment.CenterVertically),
         ) {
             BatteryReadout(
                 snapshot.batteryPercent, batteryColor, accent, scale, tokens,
@@ -108,7 +110,8 @@ fun AvionicsFace(
             ) {
                 StencilText(
                     text = snapshot.dateText,
-                    fontSizePx = scale.px(tokens.metaFontPx),
+                    // 50% larger than the battery/meta size, per request.
+                    fontSizePx = scale.px(tokens.metaFontPx * 1.5f),
                     color = fg,
                     trackingPx = scale.px(2f),
                 )
@@ -199,6 +202,7 @@ private fun BatteryReadout(
             fontSizePx = scale.px(tokens.metaFontPx),
             color = textColor,
             trackingPx = scale.px(1f),
+            fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.width(d(10f)))
         AccentBar(accent, scale)

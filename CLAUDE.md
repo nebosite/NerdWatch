@@ -101,9 +101,12 @@ design discussion before assuming any element can live on the dial.
     `org.json` (not JVM-testable) so it's verified against the live feed instead.
   - Verified on the emulator: live fetch showed current/forecast; forcing Kp
     6.0/8.5 confirmed the yellow-orange and red-magenta blends.
+  - *Relabel (user, 2026-07-26):* the widget label is now **`Kp Index`** and the
+    Kp value font is 80% larger (`16→28.8`, chips widened `42→52`). To fit the
+    bigger values plus the +50% date, the face column gap was tightened `10→5`.
   - *Follow-ups:* a tap-through to a solar detail screen in the app, and adding
-    SOLAR to the WFF dial (WFF has no NOAA source — would need a complication or a
-    data-provider service).
+    the widget to the WFF dial (WFF has no NOAA source — would need a complication
+    or a data-provider service).
 
 - **Moon widget (user request, 2026-07-24).** Upper-right of the face, right of
   the centered battery/date and above the seconds box: the moon in its current
@@ -140,6 +143,12 @@ design discussion before assuming any element can live on the dial.
     a puffy cloud. **Cloud count by forecast cover:** none ≤30%, one >30%, a
     second copy (offset down-right) >60% — `MoonData.cloudCountForCover` (pure,
     tested), fed by the Open-Meteo night-hours average.
+  - *Refinements 4 (user, 2026-07-26):* the cloud **highlight** now also follows
+    the inverse-contrast rule — silver over the sky/shadow, dark amber over the
+    lit face (a second `clipPath(litPath)` pass), so clouds crossing the bright
+    moon read as uniformly dark. Also (face-wide): the date font is +50%, the
+    battery `%` is `FontWeight.Bold` (synthetic — Michroma ships a single weight,
+    so it's a modest faux-bold).
   - *Refinements 2 (user, 2026-07-24):* the sky ring now hugs the (shrunk) moon
     (`ringRadius = moonRadius + 4`); the cloud is a "romantic" bumpy silhouette,
     2× the moon's diameter, widest at a flat base and pointed at each side, drawn
