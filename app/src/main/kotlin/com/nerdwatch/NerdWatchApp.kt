@@ -35,6 +35,7 @@ import com.nerdwatch.moon.rememberMoonData
 import com.nerdwatch.solar.rememberSolarData
 import com.nerdwatch.timer.CountdownTimer
 import com.nerdwatch.timer.TimerFormatter
+import com.nerdwatch.weather.rememberWeatherData
 import com.nerdwatch.ui.AlarmScreen
 import com.nerdwatch.ui.AvionicsFace
 import com.nerdwatch.ui.FaceSnapshot
@@ -110,6 +111,7 @@ fun NerdWatchApp() {
     val stepCount = rememberStepCount()
     val solar = rememberSolarData()
     val moon = rememberMoonData()
+    val weather = rememberWeatherData()
 
     // Fast ticks while either the chrono or a timer is live; idle otherwise.
     val needsFastTick = chrono.isRunning || timer.isRunning(monotonicNow)
@@ -144,10 +146,16 @@ fun NerdWatchApp() {
     // placeholder. Temp stays the design's stub, and the next event is still a
     // placeholder until the watch can sync a calendar.
     val stepsText = stepCount?.let { String.format(Locale.US, "%,d", it) } ?: FaceSnapshot.PREVIEW.steps
+    // Live current temp when known, else the design stub; the forecast (1h after
+    // sunset) shows only when weather is available.
+    val tempText = weather.currentTempF?.let { "$it°" } ?: FaceSnapshot.PREVIEW.temperature
+    val forecastText = weather.postSunsetTempF?.let { "$it°" }
     val base = FaceSnapshot.PREVIEW.copy(
         batteryPercent = batteryPercent,
         steps = stepsText,
         dateText = dateText,
+        temperature = tempText,
+        temperatureForecast = forecastText,
     )
 
     val snapshot = if (chrono.isEngaged) {

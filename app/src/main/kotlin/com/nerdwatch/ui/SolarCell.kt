@@ -31,15 +31,23 @@ import java.util.Locale
  * magenta). Sits between STEPS and TEMP; a tap-through to a solar detail screen
  * is a future addition.
  */
+/** The night-max chip's font: 80% larger than the original 16px, then −10%. */
+private const val NIGHT_KP_FONT_PX = 16f * 1.8f * 0.9f
+
 @Composable
 fun SolarCell(
     solar: SolarData,
     palette: AvionicsPalette,
     scale: DesignScale,
     modifier: Modifier = Modifier,
+    currentKpFontDesignPx: Float = NIGHT_KP_FONT_PX,
 ) {
     val density = LocalDensity.current
     fun d(px: Float): Dp = with(density) { scale.px(px).toDp() }
+
+    // Widen the current-Kp chip in step with its larger font so "3.3" still
+    // clears the rounded box.
+    val currentChipWidth = 52f * (currentKpFontDesignPx / NIGHT_KP_FONT_PX)
 
     Column(
         modifier = modifier,
@@ -52,15 +60,24 @@ fun SolarCell(
             trackingPx = scale.px(1.5f),
         )
         Spacer(Modifier.height(d(3f)))
-        Row(horizontalArrangement = Arrangement.spacedBy(d(4f))) {
-            KpChip(solar.currentKp, palette, scale)
-            KpChip(solar.nightMaxKp, palette, scale)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(d(4f)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            KpChip(solar.currentKp, palette, scale, currentKpFontDesignPx, currentChipWidth)
+            KpChip(solar.nightMaxKp, palette, scale, NIGHT_KP_FONT_PX, 52f)
         }
     }
 }
 
 @Composable
-private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
+private fun KpChip(
+    kp: Double?,
+    palette: AvionicsPalette,
+    scale: DesignScale,
+    fontDesignPx: Float,
+    widthDesignPx: Float,
+) {
     val density = LocalDensity.current
     fun d(px: Float): Dp = with(density) { scale.px(px).toDp() }
 
@@ -69,7 +86,7 @@ private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
 
     Box(
         modifier = Modifier
-            .width(d(52f))
+            .width(d(widthDesignPx))
             .clip(RoundedCornerShape(d(4f)))
             .background(background)
             .padding(vertical = d(2f)),
@@ -77,8 +94,7 @@ private fun KpChip(kp: Double?, palette: AvionicsPalette, scale: DesignScale) {
     ) {
         FixedWidthNumerals(
             text = text,
-            // 80% larger than the original 16px, then shrunk 10% per request.
-            fontSizePx = scale.px(16f * 1.8f * 0.9f),
+            fontSizePx = scale.px(fontDesignPx),
             color = Color(palette.fg),
             weight = FontWeight.Bold,
             cellAlignment = Alignment.BottomCenter,

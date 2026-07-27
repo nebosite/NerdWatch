@@ -1,24 +1,16 @@
 package com.nerdwatch.moon
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
-import android.os.CancellationSignal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
+import com.nerdwatch.location.currentLocation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -26,8 +18,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.concurrent.Executors
-import kotlin.coroutines.resume
 
 /**
  * Assembles [MoonData]: the phase (from the date, always available), and — when
@@ -62,48 +52,6 @@ fun rememberMoonData(): MoonData {
         }
     }
     return data
-}
-
-/**
- * A location fix: the freshest last-known across providers, or — since
- * last-known is often null on a cold start (and on the emulator) — a one-shot
- * [LocationManager.getCurrentLocation] with a timeout.
- */
-private suspend fun currentLocation(context: Context): Location? {
-    fun granted(permission: String) =
-        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    if (!granted(Manifest.permission.ACCESS_COARSE_LOCATION) &&
-        !granted(Manifest.permission.ACCESS_FINE_LOCATION)
-    ) {
-        return null
-    }
-
-    val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
-    val providers = listOf(
-        LocationManager.GPS_PROVIDER,
-        LocationManager.NETWORK_PROVIDER,
-        LocationManager.PASSIVE_PROVIDER,
-    )
-
-    providers.mapNotNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }
-        .maxByOrNull { it.time }
-        ?.let { return it }
-
-    val provider = providers.firstOrNull { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
-        ?: return null
-
-    return withTimeoutOrNull(12_000) {
-        suspendCancellableCoroutine { cont ->
-            val signal = CancellationSignal()
-            cont.invokeOnCancellation { signal.cancel() }
-            val executor = Executors.newSingleThreadExecutor()
-            runCatching {
-                manager.getCurrentLocation(provider, signal, executor) { location ->
-                    if (cont.isActive) cont.resume(location)
-                }
-            }.onFailure { if (cont.isActive) cont.resume(null) }
-        }
-    }
 }
 
 /** Cloud count from the average cover across tonight's local night hours. */

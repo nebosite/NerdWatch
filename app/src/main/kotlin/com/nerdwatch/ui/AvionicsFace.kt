@@ -333,9 +333,14 @@ private fun DataRow(
             "STEPS", snapshot.steps, palette, tokens, scale, borderOnStart = true,
             modifier = Modifier.tapGesture(onStepsTap),
         )
-        SolarCell(solar = solar, palette = palette, scale = scale)
+        SolarCell(
+            solar = solar, palette = palette, scale = scale,
+            // The current-Kp chip matches the current-temperature value size.
+            currentKpFontDesignPx = tokens.dataFontPx,
+        )
         DataCell(
             "TEMP", snapshot.temperature, palette, tokens, scale, borderOnStart = false,
+            secondaryValue = snapshot.temperatureForecast,
             modifier = Modifier.tapGesture(onTempTap),
         )
     }
@@ -350,6 +355,7 @@ private fun DataCell(
     scale: DesignScale,
     borderOnStart: Boolean,
     modifier: Modifier = Modifier,
+    secondaryValue: String? = null,
 ) {
     val density = LocalDensity.current
     fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
@@ -383,6 +389,15 @@ private fun DataCell(
                 color = Color(palette.fg),
                 weight = FontWeight.Bold,
             )
+            // The forecast temp (1h after sunset): 20% smaller, dimmed, beneath.
+            if (secondaryValue != null) {
+                FixedWidthNumerals(
+                    text = secondaryValue,
+                    fontSizePx = scale.px(tokens.dataFontPx * 0.8f),
+                    color = Color(palette.dim),
+                    weight = FontWeight.Bold,
+                )
+            }
         }
 
         Spacer(Modifier.width(d(10f)))

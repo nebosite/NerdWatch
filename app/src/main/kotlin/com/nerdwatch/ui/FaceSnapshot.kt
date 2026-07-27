@@ -16,6 +16,8 @@ data class FaceSnapshot(
     val secondsText: String,
     val steps: String,
     val temperature: String,
+    /** Forecast temp one hour after local sunset; null hides the second line. */
+    val temperatureForecast: String? = null,
     val nextEventName: String,
     val nextEventCountdown: String,
     val chronoEngaged: Boolean = false,
@@ -34,6 +36,7 @@ data class FaceSnapshot(
             secondsText = ":07",
             steps = "8,432",
             temperature = "78°",
+            temperatureForecast = "64°",
             nextEventName = "STANDUP",
             nextEventCountdown = "T-2H 37M",
         )

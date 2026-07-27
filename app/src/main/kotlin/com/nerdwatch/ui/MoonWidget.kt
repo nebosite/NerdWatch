@@ -57,19 +57,32 @@ fun MoonWidget(
 
     Canvas(modifier = modifier.size(sizeDp)) {
         val center = Offset(size.width / 2f, size.height / 2f)
-        val moonRadius = scale.px(18f)
-        val ringRadius = moonRadius + scale.px(4f)   // ring hugs the (already shrunk) moon
+        val moonRadius = scale.px(18f * MOON_SCALE)
+        val ringRadius = moonRadius + scale.px(4f)   // ring hugs the moon
+
+        // Clouds are sized off the pre-growth radius so the +20% moon doesn't
+        // inflate them, then shrunk 20% and nudged right per request.
+        val cloudRadius = scale.px(18f) * CLOUD_SCALE
+        val cloudXShift = scale.px(CLOUD_SHIFT_PX)
 
         val litPath = litRegionPath(center, moonRadius, moon.phaseFraction)
 
         drawMoonDisk(center, moonRadius, litPath, palette, fullMoon)
         drawRing(center, ringRadius, palette, scale)
         if (moon.cloudCount >= 1) {
-            drawNightCloud(center, moonRadius, litPath, palette, cloudImage, cloudHighlight, moon.cloudCount)
+            drawNightCloud(
+                center, cloudRadius, cloudXShift, litPath, palette,
+                cloudImage, cloudHighlight, moon.cloudCount,
+            )
         }
         moon.ringAngleDeg?.let { drawMarker(center, ringRadius, it, palette, scale) }
     }
 }
+
+/** Moon disk / ring grow 20%; clouds shrink 20% and shift right 20 design px. */
+private const val MOON_SCALE = 1.2f
+private const val CLOUD_SCALE = 0.8f
+private const val CLOUD_SHIFT_PX = 20f
 
 /**
  * Dark shadow disk with the lit phase on top: the textured full-moon image,
@@ -167,7 +180,8 @@ private fun DrawScope.drawMarker(
  */
 private fun DrawScope.drawNightCloud(
     center: Offset,
-    moonRadius: Float,
+    cloudRadius: Float,
+    xShift: Float,
     litPath: Path,
     palette: AvionicsPalette,
     cloud: ImageBitmap,
@@ -178,11 +192,11 @@ private fun DrawScope.drawNightCloud(
     val darkAmber = Color(buttonFill(palette))          // matches the buttons' background
     val silver = Color(0xFFDCE2EC)
 
-    // Base cloud = 1.5× the moon width, then stretched 50% wider and 2× taller.
-    val cloudWidth = moonRadius * 3f * 1.5f
-    val cloudHeight = (moonRadius * 3f * cloud.height / cloud.width) * 2f
+    // Base cloud = 1.5× the (cloud) width, then stretched 50% wider and 2× taller.
+    val cloudWidth = cloudRadius * 3f * 1.5f
+    val cloudHeight = (cloudRadius * 3f * cloud.height / cloud.width) * 2f
     // Grow the extra height downward: keep the original top edge.
-    val topY = center.y - (moonRadius * 3f * cloud.height / cloud.width) / 2f
+    val topY = center.y - (cloudRadius * 3f * cloud.height / cloud.width) / 2f
 
     fun drawCloudAt(cloudCenterX: Float, cloudTop: Float) {
         val left = cloudCenterX - cloudWidth / 2f
@@ -203,9 +217,9 @@ private fun DrawScope.drawNightCloud(
         clipPath(litPath) { paint(highlight, darkAmber, 0.9f) } // dark highlights over the lit face
     }
 
-    drawCloudAt(center.x, topY)
+    drawCloudAt(center.x + xShift, topY)
     // A second copy, a little down and to the right, only when it is cloudier.
-    if (count >= 2) drawCloudAt(center.x + moonRadius * 0.6f, topY + moonRadius * 0.6f)
+    if (count >= 2) drawCloudAt(center.x + xShift + cloudRadius * 0.6f, topY + cloudRadius * 0.6f)
 }
 
 /** The buttons' apparent fill: their chip color composited over the face background. */

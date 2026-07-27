@@ -291,6 +291,30 @@ and 20% shorter than its first swap-in look (user, 2026-07-27). The battery is n
 longer in the column flow, so the column's top padding was raised (46→78) to give
 the top-centre moon room above the date.
 
+### Temp forecast, bigger current Kp, bigger moon (user, 2026-07-27)
+
+- **TEMP shows two temperatures.** Under the live current temp sits a **second,
+  20% smaller, dimmed** temperature: the forecast for **one hour after tonight's
+  local sunset**. Both are live from Open-Meteo (`current=temperature_2m`,
+  `hourly=temperature_2m`, `daily=sunset`, Fahrenheit). New `weather/` package:
+  `WeatherData`, `PostSunsetTemp` (pure — nearest hourly sample to sunset+1h,
+  unit-tested), `WeatherProvider` (`rememberWeatherData`). `FaceSnapshot` gained
+  `temperatureForecast: String?` (null hides the second line); `DataCell` gained
+  `secondaryValue`. Current temp falls back to the design stub (`78°`) and the
+  forecast is simply absent when there's no location/network. Verified on the
+  emulator by mock-locating to Seattle (current + post-sunset both rendered).
+- **The location fetch is now shared.** Extracted from `MoonProvider` into
+  `location/LocationProvider.kt` (`currentLocation`), used by both moon and
+  weather, so the one-shot GPS logic isn't duplicated.
+- **The current-Kp chip matches the current-temperature size.** `SolarCell` takes
+  `currentKpFontDesignPx` (= `tokens.dataFontPx`, 34) for the **first** chip and
+  widens it in step; the night-max chip keeps its `16·1.8·0.9` font.
+- **Moon widget +20%, clouds −20% and shifted.** `MoonWidget` scales the disk +
+  ring by `MOON_SCALE = 1.2`; clouds are sized off the *pre-growth* radius times
+  `CLOUD_SCALE = 0.8` (so the bigger moon doesn't inflate them) and nudged right
+  by `CLOUD_SHIFT_PX = 20`. (Compose `Canvas`/`drawBehind` doesn't clip, so the
+  shifted cloud overhanging the 84px canvas renders fine.)
+
 ### Red-only night vision (user, 2026-07-27)
 
 A **long-press on the moon widget** toggles a night-vision filter that zeroes the
