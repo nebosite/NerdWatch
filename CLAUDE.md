@@ -284,11 +284,25 @@ synced calendar account). Don't mark either "done" from an emulator screenshot.
 The battery and the moon widget **swapped places**: the moon is now the
 top-centre element (absolute overlay, `align(TopCenter).offset(x=0, y=6)`), and
 the battery moved to the moon's old upper-right spot (`offset(x=150, y=143)`,
-beside the time / above the seconds box) at **2× size**
-(`BatteryReadout(fontScale = 2f)` scales the font, accent bars, and spacing) and
-`graphicsLayer(scaleX = 0.9f)` to narrow it 10% without changing its height. The
-battery is no longer in the column flow, so the column's top padding was raised
-(46→78) to give the top-centre moon room above the date.
+beside the time / above the seconds box). It is drawn at **2× size**
+(`BatteryReadout(fontScale = 2f)` scales the font, accent bars, and spacing) then
+scaled down by `graphicsLayer(scaleX = 0.63f, scaleY = 0.8f)` — i.e. 30% narrower
+and 20% shorter than its first swap-in look (user, 2026-07-27). The battery is no
+longer in the column flow, so the column's top padding was raised (46→78) to give
+the top-centre moon room above the date.
+
+### Red-only night vision (user, 2026-07-27)
+
+A **long-press on the moon widget** toggles a night-vision filter that zeroes the
+green and blue channels of every rendered pixel, leaving red-on-black. It is a
+single global post-process (`ui/RedOnlyFilter.kt` — a `Modifier.redOnlyFilter`
+that renders the subtree into a `saveLayer` with a `ColorMatrix` colour filter),
+applied at the app root (`BoxWithConstraints` in `NerdWatchApp`), so it catches
+*all* display colours — palette tokens, the amber glow, and the moon's hard-coded
+cloud tints alike — not just palette-derived ones. State is in-memory (`redOnly`),
+resets on relaunch. The moon reuses the shared `longPressGesture` + progress arc
+(`onMoonLongPress`/`onMoonProgress`), like the time's 12/24h toggle. Verified on
+the emulator: amber → long-press moon → red → long-press → amber.
 
 ### Clock format (user, 2026-07-24)
 

@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -39,6 +40,7 @@ import com.nerdwatch.ui.AvionicsFace
 import com.nerdwatch.ui.FaceSnapshot
 import com.nerdwatch.ui.LowBatteryVignette
 import com.nerdwatch.ui.TimeUpOverlay
+import com.nerdwatch.ui.redOnlyFilter
 import com.nerdwatch.ui.TimerPresetScreen
 import com.nerdwatch.ui.TimerRunningScreen
 import kotlinx.coroutines.delay
@@ -74,6 +76,7 @@ fun NerdWatchApp() {
     var timeUp by remember { mutableStateOf(false) }
     var pressProgress by remember { mutableFloatStateOf(0f) }
     var lightOn by remember { mutableStateOf(false) }
+    var redOnly by remember { mutableStateOf(false) }
     var use24Hour by remember { mutableStateOf(false) }
     var monotonicNow by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     var wallNow by remember { mutableStateOf(LocalDateTime.now()) }
@@ -162,7 +165,7 @@ fun NerdWatchApp() {
         )
     }
 
-    BoxWithConstraints {
+    BoxWithConstraints(modifier = Modifier.redOnlyFilter(redOnly)) {
         val density = LocalDensity.current
         val scale = DesignScale(with(density) { maxWidth.toPx() })
 
@@ -195,6 +198,8 @@ fun NerdWatchApp() {
                 onTimeLongPress = { use24Hour = !use24Hour },
                 onTimeProgress = { pressProgress = it },
                 moon = moon,
+                onMoonLongPress = { redOnly = !redOnly },
+                onMoonProgress = { pressProgress = it },
             )
 
             Screen.TIMER_PRESET -> TimerPresetScreen(

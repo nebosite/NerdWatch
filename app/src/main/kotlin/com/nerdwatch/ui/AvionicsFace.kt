@@ -61,6 +61,8 @@ fun AvionicsFace(
     onTimeLongPress: () -> Unit = {},
     onTimeProgress: (Float) -> Unit = {},
     moon: MoonData = MoonData.UNKNOWN,
+    onMoonLongPress: () -> Unit = {},
+    onMoonProgress: (Float) -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -72,6 +74,7 @@ fun AvionicsFace(
             ),
     ) {
         val density = LocalDensity.current
+        val scope = rememberCoroutineScope()
         val faceWidthPx = with(density) { maxWidth.toPx() }
         val scale = DesignScale(faceWidthPx)
         fun d(designPx: Float): Dp = with(density) { scale.px(designPx).toDp() }
@@ -140,25 +143,33 @@ fun AvionicsFace(
 
         // Swapped with the battery: the moon is now top-centre, the battery
         // upper-right. Anchored absolutely so the 12/24h toggle never nudges it.
+        // A long-press on it toggles the red-only night-vision filter.
         MoonWidget(
             moon = moon,
             palette = palette,
             scale = scale,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(x = d(0f), y = d(6f)),
+                .offset(x = d(0f), y = d(6f))
+                .longPressGesture(
+                    longPressEnabled = true,
+                    scope = scope,
+                    onTap = {},
+                    onLongPress = onMoonLongPress,
+                    onProgress = onMoonProgress,
+                ),
         )
 
-        // The battery, now 2× size, in the moon's old upper-right spot — dropped
-        // below the date line so its wider glyphs clear the date, nudged down and
-        // squeezed 10% narrower per request.
+        // The battery, drawn at 2× then scaled: 30% narrower and 20% shorter than
+        // its earlier look (scaleX 0.9 → 0.63, scaleY 1.0 → 0.8) per request. Sits
+        // in the moon's old upper-right spot, below the date and above the seconds.
         BatteryReadout(
             snapshot.batteryPercent, batteryColor, accent, scale, tokens,
             fontScale = 2f,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .offset(x = d(150f), y = d(143f))
-                .graphicsLayer(scaleX = 0.9f)
+                .graphicsLayer(scaleX = 0.63f, scaleY = 0.8f)
                 .tapGesture(onBatteryTap),
         )
 
