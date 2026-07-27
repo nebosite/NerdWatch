@@ -383,20 +383,26 @@ private fun DataCell(
                 trackingPx = scale.px(2f),
                 textAlign = if (borderOnStart) TextAlign.Start else TextAlign.End,
             )
-            FixedWidthNumerals(
-                text = value,
-                fontSizePx = scale.px(tokens.dataFontPx),
-                color = Color(palette.fg),
-                weight = FontWeight.Bold,
-            )
-            // The forecast temp (1h after sunset): 20% smaller, dimmed, beneath.
-            if (secondaryValue != null) {
+            // The main value, with the forecast temp (1h after sunset) beside it:
+            // 20% smaller and dimmed, bottom-aligned so the two share a baseline.
+            Row(verticalAlignment = Alignment.Bottom) {
                 FixedWidthNumerals(
-                    text = secondaryValue,
-                    fontSizePx = scale.px(tokens.dataFontPx * 0.8f),
-                    color = Color(palette.dim),
+                    text = value,
+                    fontSizePx = scale.px(tokens.dataFontPx),
+                    color = Color(palette.fg),
                     weight = FontWeight.Bold,
+                    cellAlignment = Alignment.BottomCenter,
                 )
+                if (secondaryValue != null) {
+                    Spacer(Modifier.width(d(8f)))
+                    FixedWidthNumerals(
+                        text = secondaryValue,
+                        fontSizePx = scale.px(tokens.dataFontPx * 0.8f),
+                        color = Color(palette.dim),
+                        weight = FontWeight.Bold,
+                        cellAlignment = Alignment.BottomCenter,
+                    )
+                }
             }
         }
 

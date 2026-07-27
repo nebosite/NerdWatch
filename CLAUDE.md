@@ -293,9 +293,11 @@ the top-centre moon room above the date.
 
 ### Temp forecast, bigger current Kp, bigger moon (user, 2026-07-27)
 
-- **TEMP shows two temperatures.** Under the live current temp sits a **second,
-  20% smaller, dimmed** temperature: the forecast for **one hour after tonight's
-  local sunset**. Both are live from Open-Meteo (`current=temperature_2m`,
+- **TEMP shows two temperatures, side by side.** Beside the live current temp
+  sits a **second, 20% smaller, dimmed** temperature, bottom-aligned to share a
+  baseline: the forecast for **one hour after tonight's local sunset** (the two
+  were stacked at first, then set side by side per the user, 2026-07-27). Both
+  are live from Open-Meteo (`current=temperature_2m`,
   `hourly=temperature_2m`, `daily=sunset`, Fahrenheit). New `weather/` package:
   `WeatherData`, `PostSunsetTemp` (pure — nearest hourly sample to sunset+1h,
   unit-tested), `WeatherProvider` (`rememberWeatherData`). `FaceSnapshot` gained
