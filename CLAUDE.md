@@ -420,6 +420,11 @@ Consequences:
 
 ## Commands
 
+Installing on the **real Galaxy Watch 6** (Wi-Fi wireless debugging, activation,
+permissions, and the data that only resolves on hardware) is written up in
+[`DEPLOY.md`](DEPLOY.md), verified end-to-end on 2026-07-30. The commands below
+are the emulator loop.
+
 ```powershell
 # Build + test
 .\gradlew testDebugUnitTest assembleDebug
