@@ -26,10 +26,11 @@ class AlarmReceiver : BroadcastReceiver() {
             },
         )
 
+        val message = intent.getStringExtra(EXTRA_MESSAGE)?.ifBlank { null } ?: "Alarm"
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher)
             .setContentTitle("NerdWatch")
-            .setContentText("Alarm")
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
@@ -44,5 +45,6 @@ class AlarmReceiver : BroadcastReceiver() {
     companion object {
         const val CHANNEL_ID = "nerdwatch_alarm"
         const val NOTIFICATION_ID = 1001
+        const val EXTRA_MESSAGE = "com.nerdwatch.alarm.MESSAGE"
     }
 }

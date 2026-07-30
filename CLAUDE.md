@@ -188,10 +188,15 @@ design discussion before assuming any element can live on the dial.
     `alarm/AlarmFormatter.kt` (absolute "h:mm a"/weekday + relative "IN 2H 22M").
     11 tests.
   - Real scheduling: `AlarmScheduler` schedule/cancel via
-    `AlarmManager.setExactAndAllowWhileIdle` (permission `USE_EXACT_ALARM`,
-    request code = the instant's epoch second) firing `AlarmReceiver`, which posts
-    a high-importance notification + vibration (`POST_NOTIFICATIONS`, requested at
-    launch).
+    `AlarmManager.setAlarmClock` (permission `USE_EXACT_ALARM`, request code = the
+    instant's epoch second) firing `AlarmReceiver`, which posts a high-importance
+    notification + vibration (`POST_NOTIFICATIONS`, requested at launch).
+    **`setAlarmClock`, not `setExactAndAllowWhileIdle`, is deliberate** (fixed
+    2026-07-30): the latter escapes Doze but is still held for minutes once the
+    app is killed into a restricted App Standby bucket or Battery Saver kicks in —
+    verified on the real watch by `dumpsys alarm` showing a fired timer deferred
+    `app_standby=-3m battery_saver=-3m`. Only alarm-clock alarms are exempt from
+    all three, so they fire on time with the app dead.
   - *Multi-alarm (user, 2026-07-25):* SET is now **ADD** (adds/updates). A second
     row has **CLEAR** (deletes the current alarm; shows `CLEARED`, and touching
     the dial sets a new one) and **BACK** (to the face, no change). The active
@@ -244,6 +249,20 @@ design discussion before assuming any element can live on the dial.
     one-shot vibration, tap dismisses to the face. All paths walked on the
     emulator. Pure logic in `timer/CountdownTimer.kt` + `timer/TimerFormatter.kt`
     (10 tests). Timing is monotonic `uptimeMillis`, like the chrono.
+  - *Timer fires while asleep (user, 2026-07-30):* the in-composition countdown
+    only vibrated while the app was awake/foreground, so a backgrounded or killed
+    app **missed the timer** (user hit this on the real watch). Fixed by also
+    scheduling an OS backstop through the alarm machinery: on start/adjust,
+    `AlarmScheduler.schedule(context, at, "Timer done")` at expiry **+2s**
+    (`TIMER_BACKSTOP_LAG_MS`, tracked in `timerAlarmAt`); cancel on
+    cancel/dismiss, and the in-app fire also cancels it (the app handled it → no
+    double-buzz). The +2s means a foreground app's TIME UP flash wins the race and
+    cancels the backstop, while an asleep app still gets the OS notification. Uses
+    `setAlarmClock` so App Standby / Battery Saver can't defer it. Verified on the
+    real watch: 1-min timer, `am kill` the app, alarm-clock persisted, fired on
+    time with the UI never reopened and posted the `nerdwatch_alarm` notification.
+    `AlarmScheduler.schedule`/`AlarmReceiver` gained a `message` extra so the
+    timer reads "Timer done" vs the alarm's "Alarm".
   - *Increment 5 DONE (partial by design)* — real data + sub-app launches.
     Battery is live from `BatteryManager` (verified: `adb ... battery set level 42`
     showed 42% on the face). Tapping battery / steps / temp / next opens the

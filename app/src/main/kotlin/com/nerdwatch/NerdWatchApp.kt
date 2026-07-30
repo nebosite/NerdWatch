@@ -67,6 +67,13 @@ private const val RUNNING_TICK_MS = 16L
 private const val APPOINTMENT_MINUTES = 157L
 private const val ALARM_LEAD_MINUTES = 15L
 
+/**
+ * How far after a timer's exact expiry the OS backstop fires. Long enough that a
+ * foreground app's in-app TIME UP handling wins the race and cancels it (no
+ * double-buzz); short enough to be imperceptible when the app is asleep.
+ */
+private const val TIMER_BACKSTOP_LAG_MS = 2_000L
+
 private enum class Screen { FACE, TIMER_PRESET, TIMER_RUNNING, ALARM }
 
 @Composable
@@ -88,8 +95,27 @@ fun NerdWatchApp() {
     var alarmDefaultOffset by remember { mutableDoubleStateOf(0.0) }
     // Active alarms, by time (in-memory until calendar/persistence lands).
     var alarms by remember { mutableStateOf<List<Instant>>(emptyList()) }
+    // The OS backstop scheduled for the running timer, so it buzzes even when the
+    // app is asleep. Null when no timer is scheduled.
+    var timerAlarmAt by remember { mutableStateOf<Instant?>(null) }
 
     val context = LocalContext.current
+
+    // Schedule / cancel the OS backstop for the running timer. It fires ~2s after
+    // the exact expiry: when the app is awake its in-app TIME UP flash fires first
+    // and cancels this, so there's no double-buzz; when the app is asleep this is
+    // the only thing that fires, so the timer still buzzes.
+    fun scheduleTimerBackstop(remainingMs: Long) {
+        timerAlarmAt?.let { AlarmScheduler.cancel(context, it) }
+        val at = Instant.now().plusMillis(remainingMs + TIMER_BACKSTOP_LAG_MS)
+        AlarmScheduler.schedule(context, at, "Timer done")
+        timerAlarmAt = at
+    }
+
+    fun cancelTimerBackstop() {
+        timerAlarmAt?.let { AlarmScheduler.cancel(context, it) }
+        timerAlarmAt = null
+    }
 
     // Ask once for step + location access; both readers degrade gracefully if
     // denied or, as on the emulator, simply unavailable.
@@ -124,10 +150,12 @@ fun NerdWatchApp() {
     }
 
     // Fire once when the timer reaches zero: buzz and raise the time-up flash.
+    // The app handled it, so cancel the OS backstop to avoid a second buzz.
     LaunchedEffect(timer.hasFired(monotonicNow)) {
         if (timer.isSet() && timer.hasFired(monotonicNow) && !timeUp) {
             timeUp = true
             vibrate(context)
+            cancelTimerBackstop()
         }
     }
 
@@ -214,7 +242,9 @@ fun NerdWatchApp() {
                 palette = palette,
                 scale = scale,
                 onPick = { minutes ->
-                    timer = timer.startMinutes(minutes, SystemClock.uptimeMillis())
+                    val now = SystemClock.uptimeMillis()
+                    timer = timer.startMinutes(minutes, now)
+                    scheduleTimerBackstop(timer.remainingMs(now))
                     screen = Screen.TIMER_RUNNING
                 },
                 onBack = { screen = Screen.FACE },
@@ -224,9 +254,14 @@ fun NerdWatchApp() {
                 remainingBig = TimerFormatter.big(timer.remainingMs(monotonicNow)),
                 palette = palette,
                 scale = scale,
-                onAdjust = { delta -> timer = timer.adjustMinutes(delta, SystemClock.uptimeMillis()) },
+                onAdjust = { delta ->
+                    val now = SystemClock.uptimeMillis()
+                    timer = timer.adjustMinutes(delta, now)
+                    scheduleTimerBackstop(timer.remainingMs(now))
+                },
                 onCancel = {
                     timer = timer.cancel()
+                    cancelTimerBackstop()
                     screen = Screen.TIMER_PRESET
                 },
                 onBackToFace = { screen = Screen.FACE },
@@ -266,6 +301,7 @@ fun NerdWatchApp() {
                 onDismiss = {
                     timeUp = false
                     timer = timer.cancel()
+                    cancelTimerBackstop()
                     screen = Screen.FACE
                 },
             )
